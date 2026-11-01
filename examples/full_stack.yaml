@@ -1,0 +1,107 @@
+# Phase 1: Enterprise Level
+apiVersion: github.iac/v1alpha1
+kind: EnterprisePolicy
+metadata:
+  name: octo-enterprise-policy
+  enterprise: octocorp
+spec:
+  enabled_repositories: all
+  allowed_actions: selected
+
+---
+# Phase 1: EMU SCIM External Group Mapping
+apiVersion: github.iac/v1alpha1
+kind: EMUExternalGroup
+metadata:
+  name: SecOps-Global-Engineering
+  enterprise: octocorp
+spec:
+  externalId: okta-group-998822
+  displayName: SecOps-Global-Engineering
+
+---
+# Phase 2: Enterprise Governance & Security Analysis
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseSecuritySetting
+metadata:
+  name: enterprise-security-baseline
+  enterprise: octocorp
+spec:
+  advanced_security_enabled_for_new_repositories: true
+  secret_scanning_enabled_for_new_repositories: true
+  secret_scanning_push_protection_enabled_for_new_repositories: true
+
+---
+# Phase 2: Governance Custom Repository Role
+apiVersion: github.iac/v1alpha1
+kind: CustomRepositoryRole
+metadata:
+  name: security-auditor
+  organization: octocorp-cloud
+spec:
+  description: Custom role allowing security team read access and triage rights
+  base_role: read
+  permissions:
+    - triage
+    - view_secret_scanning_alerts
+
+---
+# Phase 3: Organization & Team Constructs
+apiVersion: github.iac/v1alpha1
+kind: Organization
+metadata:
+  name: octocorp-cloud
+spec:
+  description: OctoCorp Cloud Engineering Platform
+  email: cloud-admin@octocorp.internal
+  requiresTwoFactorAuthentication: true
+
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: cloud-platform-team
+  organization: octocorp-cloud
+spec:
+  name: Cloud Platform Team
+  description: Platform engineers managing cloud infrastructure
+  privacy: closed
+
+---
+# Phase 4: Repository and Branch Ruleset Constructs
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: core-infrastructure
+  organization: octocorp-cloud
+spec:
+  description: Core Terraform & Kubernetes manifests
+  visibility: private
+  has_issues: true
+  has_wiki: false
+  delete_branch_on_merge: true
+
+---
+apiVersion: github.iac/v1alpha1
+kind: RepositoryRuleset
+metadata:
+  name: protect-main
+  organization: octocorp-cloud
+  repository: core-infrastructure
+spec:
+  name: protect-main
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 2
+        dismiss_stale_reviews_on_push: true
+        require_code_owner_review: true
+    - type: required_status_checks
+      parameters:
+        strict_required_status_checks_policy: true
