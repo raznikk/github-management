@@ -1,0 +1,48 @@
+apiVersion: github.iac/v1alpha1
+kind: Organization
+metadata:
+  name: octocorp-platform
+spec:
+  description: OctoCorp Platform Engineering & Core Infrastructure
+  email: platform-admins@octocorp.internal
+  requiresTwoFactorAuthentication: true
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRuleset
+metadata:
+  name: platform-branch-governance
+  organization: octocorp-platform
+spec:
+  name: platform-branch-governance
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+        - refs/heads/release/*
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 2
+        dismiss_stale_reviews_on_push: true
+        require_code_owner_review: true
+    - type: required_signatures
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationSecret
+metadata:
+  name: ARTIFACTORY_TOKEN
+  organization: octocorp-platform
+spec:
+  value: env:ARTIFACTORY_PROD_TOKEN
+  visibility: all
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationVariable
+metadata:
+  name: KUBE_CLUSTER_DOMAIN
+  organization: octocorp-platform
+spec:
+  value: k8s.platform.octocorp.internal
+  visibility: all

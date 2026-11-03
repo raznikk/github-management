@@ -1,0 +1,110 @@
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: spark-batch-jobs
+  organization: octocorp-analytics
+spec:
+  description: Distributed PySpark and Scala ETL jobs
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+  allow_squash_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: dbt-warehouse-models
+  organization: octocorp-analytics
+spec:
+  description: Enterprise DBT SQL transformation models for Snowflake
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: feast-feature-registry
+  organization: octocorp-analytics
+spec:
+  description: Declarative feature store definitions and entity definitions
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: mlflow-model-registry
+  organization: octocorp-analytics
+spec:
+  description: Production ML model artifacts and deployment pipelines
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: iceberg-catalog-specs
+  organization: octocorp-analytics
+spec:
+  description: Apache Iceberg schema evolution and partition specifications
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: kafka-avro-schemas
+  organization: octocorp-analytics
+spec:
+  description: Confluent Schema Registry Avro and Protobuf contracts
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: superset-bi-dashboards
+  organization: octocorp-analytics
+spec:
+  description: Apache Superset and Tableau dashboard-as-code definitions
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: ray-cluster-configs
+  organization: octocorp-analytics
+spec:
+  description: Distributed Ray training cluster manifests on Kubernetes
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: llm-evaluation-suite
+  organization: octocorp-analytics
+spec:
+  description: Automated benchmark harness for enterprise LLM agents
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: great-expectations-suites
+  organization: octocorp-analytics
+spec:
+  description: Data quality and schema drift assertion suites
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true

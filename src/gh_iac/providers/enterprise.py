@@ -39,8 +39,7 @@ class EnterprisePolicyProvider(BaseProvider):
             if not ent:
                 return None
 
-            # Fetch enterprise settings / policies via REST if needed for advanced settings
-            # REST: GET /enterprises/{enterprise}/settings (or actions policies)
+            # Fetch actions permissions
             actions_policy = {}
             try:
                 actions_policy = self.client.rest(
@@ -50,18 +49,31 @@ class EnterprisePolicyProvider(BaseProvider):
             except Exception:
                 pass
 
+            selected_actions = {}
+            try:
+                selected_actions = self.client.rest(
+                    "GET",
+                    f"/enterprises/{enterprise_slug}/actions/permissions/selected-actions",
+                )
+            except Exception:
+                pass
+
+            attrs = {
+                "name": ent.get("name"),
+                "slug": ent.get("slug"),
+                "description": ent.get("description"),
+                "actions_permissions": actions_policy,
+                "enabled_repositories": actions_policy.get("enabled_repositories"),
+                "allowed_actions": actions_policy.get("allowed_actions"),
+                "selected_actions": selected_actions,
+            }
             return ResourceState(
                 resource_id=manifest.resource_id,
                 kind=manifest.kind,
                 node_id=ent.get("id"),
                 url=ent.get("url"),
-                attributes={
-                    "name": ent.get("name"),
-                    "slug": ent.get("slug"),
-                    "description": ent.get("description"),
-                    "actions_permissions": actions_policy,
-                },
-                applied_spec=manifest.spec,
+                attributes=attrs,
+                applied_spec=attrs,
                 last_updated=datetime.now(timezone.utc).isoformat(),
             )
         except Exception:
@@ -99,7 +111,7 @@ class EnterprisePolicyProvider(BaseProvider):
         enterprise_slug = manifest.metadata.enterprise or manifest.metadata.name
         desired = manifest.spec
 
-        # Apply Actions policy if defined in spec (REST endpoint as GitHub has not exposed enterprise action policies in GraphQL)
+        # 1. Apply Actions base policy if defined in spec
         if "enabled_repositories" in desired or "allowed_actions" in desired:
             payload = {}
             if "enabled_repositories" in desired:
@@ -113,11 +125,119 @@ class EnterprisePolicyProvider(BaseProvider):
                 json_data=payload,
             )
 
-        # Mutate enterprise description/name via GraphQL if possible or REST
+        # 2. Apply Selected Actions policy (allowed patterns, verified actions)
+        if "selected_actions" in desired and isinstance(desired["selected_actions"], dict):
+            self.client.rest(
+                "PUT",
+                f"/enterprises/{enterprise_slug}/actions/permissions/selected-actions",
+                json_data=desired["selected_actions"],
+            )
+
+        # 3. Apply general enterprise policies (repository creation, forking, 2FA)
+        general_policy_keys = [
+            "members_can_create_repositories",
+            "members_can_create_public_repositories",
+            "members_can_create_private_repositories",
+            "members_can_create_internal_repositories",
+            "members_can_fork_private_repositories",
+            "two_factor_requirement",
+        ]
+        gen_payload = {k: desired[k] for k in general_policy_keys if k in desired}
+        if gen_payload:
+            self.client.rest(
+                "PATCH",
+                f"/enterprises/{enterprise_slug}",
+                json_data=gen_payload,
+            )
+
         return ResourceState(
             resource_id=manifest.resource_id,
             kind=manifest.kind,
             node_id=plan.current_state.get("id") if plan.current_state else None,
+            attributes=desired,
+            applied_spec=desired,
+            last_updated=datetime.now(timezone.utc).isoformat(),
+        )
+
+
+class EnterpriseRulesetProvider(BaseProvider):
+    """
+    Manages Enterprise-wide Rulesets enforcing branch & tag governance
+    across all organizations and repositories in the enterprise.
+    REST: /enterprises/{enterprise}/rulesets
+    """
+
+    def read(self, manifest: GitHubManifest) -> Optional[ResourceState]:
+        enterprise = manifest.metadata.enterprise or manifest.metadata.name
+        ruleset_name = manifest.spec.get("name", manifest.metadata.name)
+        try:
+            rulesets = self.client.rest("GET", f"/enterprises/{enterprise}/rulesets")
+            if not isinstance(rulesets, list):
+                return None
+            for r in rulesets:
+                if r.get("name") == ruleset_name:
+                    detail = self.client.rest("GET", f"/enterprises/{enterprise}/rulesets/{r.get('id')}")
+                    return ResourceState(
+                        resource_id=manifest.resource_id,
+                        kind=manifest.kind,
+                        numeric_id=r.get("id"),
+                        attributes=detail if isinstance(detail, dict) else r,
+                        applied_spec=manifest.spec,
+                        last_updated=datetime.now(timezone.utc).isoformat(),
+                    )
+            return None
+        except Exception:
+            return None
+
+    def plan(self, manifest: GitHubManifest, current: Optional[ResourceState]) -> ResourcePlan:
+        desired = manifest.spec
+        if not current:
+            return ResourcePlan(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                action=ActionType.CREATE,
+                diff={"desired": desired},
+                current_state=None,
+                desired_state=desired,
+            )
+
+        diff: Dict[str, Any] = {}
+        for k in ["enforcement", "rules", "conditions", "target"]:
+            if k in desired and current.attributes.get(k) != desired[k]:
+                diff[k] = {"old": current.attributes.get(k), "new": desired[k]}
+
+        action = ActionType.UPDATE if diff else ActionType.NOOP
+        return ResourcePlan(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            action=action,
+            diff=diff,
+            current_state=current.attributes,
+            desired_state=desired,
+        )
+
+    def apply(self, plan: ResourcePlan, manifest: GitHubManifest) -> ResourceState:
+        enterprise = manifest.metadata.enterprise or manifest.metadata.name
+        desired = manifest.spec
+        numeric_id = None
+
+        if plan.action == ActionType.CREATE:
+            res = self.client.rest("POST", f"/enterprises/{enterprise}/rulesets", json_data=desired)
+            numeric_id = res.get("id") if isinstance(res, dict) else None
+        elif plan.action == ActionType.UPDATE:
+            ruleset_id = plan.current_state.get("numeric_id") if plan.current_state else None
+            if not ruleset_id:
+                curr = self.read(manifest)
+                ruleset_id = curr.numeric_id if curr else None
+
+            if ruleset_id:
+                res = self.client.rest("PUT", f"/enterprises/{enterprise}/rulesets/{ruleset_id}", json_data=desired)
+                numeric_id = ruleset_id
+
+        return ResourceState(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            numeric_id=numeric_id,
             attributes=desired,
             applied_spec=desired,
             last_updated=datetime.now(timezone.utc).isoformat(),

@@ -1,0 +1,109 @@
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: data-platform
+  organization: octocorp-analytics
+spec:
+  name: Data Platform Infrastructure
+  description: Spark on Kubernetes and Trino query engines
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: data-science
+  organization: octocorp-analytics
+spec:
+  name: Data Science & Predictive Analytics
+  description: Forecasting models, statistical experiments, and EDA
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: bi-analytics
+  organization: octocorp-analytics
+spec:
+  name: Business Intelligence & Reporting
+  description: Enterprise dashboards, semantic models, and KPIs
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: mlops-infra
+  organization: octocorp-analytics
+spec:
+  name: MLOps & Model Deployment
+  description: Model registries, serving endpoints, and GPU scheduling
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: etl-pipelines
+  organization: octocorp-analytics
+spec:
+  name: Data Engineering & Batch Ingestion
+  description: Airflow DAGs, DBT orchestration, and data warehousing
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: data-governance
+  organization: octocorp-analytics
+spec:
+  name: Data Governance & Lineage
+  description: PII classification, cataloging, and access controls
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: feature-store
+  organization: octocorp-analytics
+spec:
+  name: Feature Engineering & Store
+  description: Online/offline Feast feature registry
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: streaming-infra
+  organization: octocorp-analytics
+spec:
+  name: Real-time Streaming Team
+  description: Apache Kafka, Flink, and schema registry operations
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: lakehouse-core
+  organization: octocorp-analytics
+spec:
+  name: Lakehouse Core Engineering
+  description: Apache Iceberg storage layout and table compaction
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: ai-research
+  organization: octocorp-analytics
+spec:
+  name: Generative AI & Foundation Models
+  description: Fine-tuning, RAG pipelines, and model evaluation
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: EMUTeamMapping
+metadata:
+  name: analytics-idp-link
+  enterprise: octocorp
+  organization: octocorp-analytics
+spec:
+  team_slug: data-platform
+  group_id: 100002

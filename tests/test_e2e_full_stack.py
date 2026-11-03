@@ -17,6 +17,8 @@ from gh_iac.providers.base import ActionType
 def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("SPLUNK_HEC_TOKEN", "splunk-secret-12345")
     monkeypatch.setenv("DD_SECRET_VAL", "datadog-key-xyz")
+    monkeypatch.setenv("SNYK_API_TOKEN", "snyk-token-abc")
+    monkeypatch.setenv("ORG_WEBHOOK_SECRET", "webhook-secret-999")
     monkeypatch.setenv("AWS_PROD_DEPLOY_KEY", "aws-super-secret-key")
 
     examples_path = Path(__file__).parent.parent / "examples" / "full_stack.yaml"
@@ -24,7 +26,7 @@ def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     # 1. Load manifests
     manifests = Engine.load_manifests(examples_path)
-    assert len(manifests) == 17
+    assert len(manifests) == 22
 
     # 2. Pre-flight linting
     linter = Linter()
@@ -54,7 +56,7 @@ def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     client = GitHubClient(config)
     engine = Engine(client, state_manager=state_mgr, concurrency=4)
 
-    # Mock provider read to return None (all 17 resources need creation)
+    # Mock provider read to return None (all 22 resources need creation)
     for m in manifests:
         provider = engine.get_provider(m.kind)
         monkeypatch.setattr(provider, "read", lambda manifest: None)
@@ -72,12 +74,12 @@ def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     # 6. Plan execution
     plans = engine.plan(manifests)
-    assert len(plans) == 17
+    assert len(plans) == 22
     assert all(p.action == ActionType.CREATE for p in plans)
 
     # 7. Apply execution
     applied = engine.apply(plans, manifests)
-    assert len(applied) == 17
+    assert len(applied) == 22
 
     # 8. Verify state was persisted encrypted to disk
     raw_disk_bytes = state_file.read_bytes()
@@ -85,8 +87,10 @@ def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
 
     # 9. Reload state and verify all resources recorded
     new_state_mgr = StateManager(backend=LocalStateBackend(state_path=state_file, passphrase=passphrase))
-    assert len(new_state_mgr.state.resources) == 17
+    assert len(new_state_mgr.state.resources) == 22
     assert "Repository/org:octocorp-cloud/core-infrastructure" in new_state_mgr.state.resources
+    assert "OrganizationRuleset/org:octocorp-cloud/org-default-protection" in new_state_mgr.state.resources
+    assert "OrganizationVariable/org:octocorp-cloud/DOCKER_REGISTRY_URL" in new_state_mgr.state.resources
 
     # 10. Drift check: With remote matching state, diff is empty
     for m in manifests:

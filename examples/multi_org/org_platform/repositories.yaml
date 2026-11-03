@@ -1,0 +1,110 @@
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: terraform-cloud-foundation
+  organization: octocorp-platform
+spec:
+  description: Foundation Terraform modules for multi-cloud deployments
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+  allow_squash_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: kubernetes-fleet-control
+  organization: octocorp-platform
+spec:
+  description: GitOps manifests for enterprise Kubernetes fleet
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: vault-secret-engine
+  organization: octocorp-platform
+spec:
+  description: HashiCorp Vault configuration-as-code
+  visibility: private
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: global-transit-network
+  organization: octocorp-platform
+spec:
+  description: Cross-region network routing and firewall definitions
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: observability-dashboards
+  organization: octocorp-platform
+spec:
+  description: Grafana dashboards and Datadog monitor definitions
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: postgres-operator-configs
+  organization: octocorp-platform
+spec:
+  description: Database operator CRDs and backup retention schedules
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: developer-service-catalog
+  organization: octocorp-platform
+spec:
+  description: Backstage internal developer portal plugins and catalog
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: enterprise-opa-policies
+  organization: octocorp-platform
+spec:
+  description: Open Policy Agent (OPA) Gatekeeper validation rules
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: reusable-actions-library
+  organization: octocorp-platform
+spec:
+  description: Enterprise-approved GitHub Actions reusable workflows
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: Repository
+metadata:
+  name: incident-response-runbooks
+  organization: octocorp-platform
+spec:
+  description: Standard operating procedures and automated triage runbooks
+  visibility: internal
+  has_issues: true
+  delete_branch_on_merge: true

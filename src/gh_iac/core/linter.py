@@ -32,12 +32,20 @@ class Linter:
         diagnostics: List[LintDiagnostic] = []
 
         ruleset_repos = set()
+        org_ruleset_orgs = set()
+        has_enterprise_ruleset = False
         for m in manifests:
-            if m.kind == "RepositoryRuleset":
+            if m.kind == "EnterpriseRuleset":
+                has_enterprise_ruleset = True
+            elif m.kind == "RepositoryRuleset":
                 repo = m.metadata.repository or (m.spec.get("repository") if m.spec else None)
                 org = m.metadata.organization
                 if repo and org:
                     ruleset_repos.add(f"{org}/{repo}".lower())
+            elif m.kind == "OrganizationRuleset":
+                org = m.metadata.organization or m.metadata.name
+                if org:
+                    org_ruleset_orgs.add(org.lower())
 
         for m in manifests:
             # 1. Naming Constraints
@@ -79,9 +87,10 @@ class Linter:
                     )
 
                 # 4. Branch Protection / Ruleset coverage
-                if m.metadata.organization:
-                    repo_key = f"{m.metadata.organization}/{m.metadata.name}".lower()
-                    if repo_key not in ruleset_repos:
+                if m.metadata.organization and not has_enterprise_ruleset:
+                    org_lower = m.metadata.organization.lower()
+                    repo_key = f"{org_lower}/{m.metadata.name}".lower()
+                    if repo_key not in ruleset_repos and org_lower not in org_ruleset_orgs:
                         diagnostics.append(
                             LintDiagnostic(
                                 rule_id="GOV001",

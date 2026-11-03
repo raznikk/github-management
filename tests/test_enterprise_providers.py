@@ -12,6 +12,8 @@ from gh_iac.providers.enterprise import (
     EnterpriseAuditStreamProvider,
     EnterpriseCustomRoleProvider,
     EnterpriseIPAllowListProvider,
+    EnterprisePolicyProvider,
+    EnterpriseRulesetProvider,
     EnterpriseRunnerGroupProvider,
 )
 
@@ -352,4 +354,131 @@ def test_enterprise_ip_allow_list_update():
     state = provider.apply(plan, manifest)
     assert state.node_id == "IP_ENTRY_999"
     assert state.attributes["name"] == "Corporate VPN Egress - Updated"
+
+
+@respx.mock
+def test_enterprise_policy_plan_and_apply():
+    config = TargetConfig.create_for_ghec(token="test-token", enterprise_slug="octocorp")
+    client = GitHubClient(config)
+    provider = EnterprisePolicyProvider(client)
+
+    manifest = GitHubManifest(
+        kind="EnterprisePolicy",
+        metadata=ManifestMetadata(
+            name="global-actions-policy",
+            enterprise="octocorp",
+        ),
+        spec={
+            "enabled_repositories": "all",
+            "allowed_actions": "selected",
+            "selected_actions": {
+                "github_owned_allowed": True,
+                "verified_allowed": True,
+                "patterns_allowed": ["actions/*"],
+            },
+            "members_can_fork_private_repositories": False,
+            "two_factor_requirement": True,
+        },
+    )
+
+    respx.post("https://api.github.com/graphql").respond(
+        status_code=200,
+        json={
+            "data": {
+                "enterprise": {
+                    "id": "ENT_001",
+                    "slug": "octocorp",
+                    "name": "OctoCorp Enterprise",
+                    "description": "Global enterprise",
+                    "url": "https://github.com/enterprises/octocorp",
+                }
+            }
+        },
+    )
+    respx.get("https://api.github.com/enterprises/octocorp/actions/permissions").respond(
+        status_code=200,
+        json={"enabled_repositories": "all", "allowed_actions": "all"},
+    )
+    respx.get("https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions").respond(
+        status_code=200,
+        json={},
+    )
+
+    current = provider.read(manifest)
+    assert current is not None
+
+    plan = provider.plan(manifest, current)
+    assert plan.action == ActionType.UPDATE
+
+    respx.put("https://api.github.com/enterprises/octocorp/actions/permissions").respond(
+        status_code=200,
+        json={"enabled_repositories": "all", "allowed_actions": "selected"},
+    )
+    respx.put("https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions").respond(
+        status_code=200,
+        json={"github_owned_allowed": True, "verified_allowed": True},
+    )
+    respx.patch("https://api.github.com/enterprises/octocorp").respond(
+        status_code=200,
+        json={"two_factor_requirement": True},
+    )
+
+    state = provider.apply(plan, manifest)
+    assert state.resource_id == manifest.resource_id
+    assert state.attributes["allowed_actions"] == "selected"
+
+
+@respx.mock
+def test_enterprise_ruleset_plan_and_apply():
+    config = TargetConfig.create_for_ghec(token="test-token", enterprise_slug="octocorp")
+    client = GitHubClient(config)
+    provider = EnterpriseRulesetProvider(client)
+
+    manifest = GitHubManifest(
+        kind="EnterpriseRuleset",
+        metadata=ManifestMetadata(
+            name="ent-branch-governance",
+            enterprise="octocorp",
+        ),
+        spec={
+            "name": "ent-branch-governance",
+            "target": "branch",
+            "enforcement": "active",
+            "conditions": {
+                "ref_name": {
+                    "include": ["refs/heads/main"],
+                }
+            },
+            "rules": [
+                {
+                    "type": "pull_request",
+                    "parameters": {"required_approving_review_count": 2},
+                }
+            ],
+        },
+    )
+
+    # 1. Read: none
+    respx.get("https://api.github.com/enterprises/octocorp/rulesets").respond(
+        status_code=200,
+        json=[],
+    )
+
+    current = provider.read(manifest)
+    assert current is None
+
+    # 2. Plan: CREATE
+    plan = provider.plan(manifest, current)
+    assert plan.action == ActionType.CREATE
+
+    # 3. Apply: POST
+    respx.post("https://api.github.com/enterprises/octocorp/rulesets").respond(
+        status_code=201,
+        json={"id": 77711, "name": "ent-branch-governance", "enforcement": "active"},
+    )
+
+    state = provider.apply(plan, manifest)
+    assert state.numeric_id == 77711
+    assert state.attributes["name"] == "ent-branch-governance"
+
 

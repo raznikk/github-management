@@ -1,0 +1,109 @@
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: core-infra
+  organization: octocorp-platform
+spec:
+  name: Core Infrastructure Team
+  description: Foundation AWS/GCP and network infrastructure
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: k8s-platform
+  organization: octocorp-platform
+spec:
+  name: Kubernetes Platform Team
+  description: EKS and GKE container platform operations
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: iam-security
+  organization: octocorp-platform
+spec:
+  name: IAM & Security Engineering
+  description: Identity, access management, and secret federation
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: networking
+  organization: octocorp-platform
+spec:
+  name: Core Networking Team
+  description: VPC peering, Transit Gateways, and DNS
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: observability
+  organization: octocorp-platform
+spec:
+  name: Observability & Telemetry
+  description: Prometheus, Datadog, OpenTelemetry telemetry pipelines
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: database-ops
+  organization: octocorp-platform
+spec:
+  name: Database Operations
+  description: Managed Postgres, MySQL, and Redis infrastructure
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: developer-experience
+  organization: octocorp-platform
+spec:
+  name: Developer Experience (DevEx)
+  description: Internal developer portal, templates, and CLI tooling
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: compliance-audit
+  organization: octocorp-platform
+spec:
+  name: Compliance & Audit
+  description: SOC2, PCI-DSS, and regulatory automated audits
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: release-engineering
+  organization: octocorp-platform
+spec:
+  name: Release Engineering
+  description: CI/CD runners, GitHub Actions libraries, and packaging
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: Team
+metadata:
+  name: site-reliability
+  organization: octocorp-platform
+spec:
+  name: Site Reliability Engineering
+  description: Enterprise uptime, incident response, and chaos tests
+  privacy: closed
+---
+apiVersion: github.iac/v1alpha1
+kind: EMUTeamMapping
+metadata:
+  name: platform-idp-link
+  enterprise: octocorp
+  organization: octocorp-platform
+spec:
+  team_slug: core-infra
+  group_id: 100001

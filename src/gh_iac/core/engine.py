@@ -17,6 +17,7 @@ from gh_iac.providers.enterprise import (
     EnterpriseCustomRoleProvider,
     EnterpriseIPAllowListProvider,
     EnterprisePolicyProvider,
+    EnterpriseRulesetProvider,
     EnterpriseRunnerGroupProvider,
     GitHubAppProvider,
 )
@@ -26,7 +27,11 @@ from gh_iac.providers.governance import (
 )
 from gh_iac.providers.organization import (
     OrganizationProvider,
+    OrganizationRulesetProvider,
+    OrganizationRunnerGroupProvider,
     OrganizationSecretProvider,
+    OrganizationVariableProvider,
+    OrganizationWebhookProvider,
     TeamProvider,
 )
 from gh_iac.providers.repository import (
@@ -46,6 +51,7 @@ KIND_PRIORITY = {
     "EMUSCIMUser": 18,
     "EMUExternalGroup": 20,
     "EMUTeamMapping": 25,
+    "EnterpriseRuleset": 26,
     "GitHubApp": 28,
     # 2. Governance constructs
     "EnterpriseSecuritySetting": 30,
@@ -53,7 +59,11 @@ KIND_PRIORITY = {
     "CustomRepositoryRole": 40,
     # 3. Organization & Team constructs
     "Organization": 50,
+    "OrganizationRunnerGroup": 52,
+    "OrganizationRuleset": 54,
     "OrganizationSecret": 55,
+    "OrganizationVariable": 56,
+    "OrganizationWebhook": 58,
     "Team": 60,
     # 4. Repository & Ruleset constructs
     "Repository": 70,
@@ -68,6 +78,7 @@ PROVIDER_REGISTRY: Dict[str, Type[BaseProvider]] = {
     "EnterpriseAuditStream": EnterpriseAuditStreamProvider,
     "EnterpriseIPAllowList": EnterpriseIPAllowListProvider,
     "EnterpriseRunnerGroup": EnterpriseRunnerGroupProvider,
+    "EnterpriseRuleset": EnterpriseRulesetProvider,
     "EMUSCIMUser": EMUSCIMUserProvider,
     "EMUExternalGroup": EMUExternalGroupProvider,
     "EMUTeamMapping": EMUTeamMappingProvider,
@@ -76,7 +87,11 @@ PROVIDER_REGISTRY: Dict[str, Type[BaseProvider]] = {
     "EnterpriseCustomRole": EnterpriseCustomRoleProvider,
     "CustomRepositoryRole": CustomRepositoryRoleProvider,
     "Organization": OrganizationProvider,
+    "OrganizationRuleset": OrganizationRulesetProvider,
+    "OrganizationRunnerGroup": OrganizationRunnerGroupProvider,
     "OrganizationSecret": OrganizationSecretProvider,
+    "OrganizationVariable": OrganizationVariableProvider,
+    "OrganizationWebhook": OrganizationWebhookProvider,
     "Team": TeamProvider,
     "Repository": RepositoryProvider,
     "RepositorySecret": RepositorySecretProvider,

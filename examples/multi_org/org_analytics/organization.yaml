@@ -1,0 +1,52 @@
+apiVersion: github.iac/v1alpha1
+kind: Organization
+metadata:
+  name: octocorp-analytics
+spec:
+  description: OctoCorp Big Data, AI Models & Lakehouse Platforms
+  email: analytics-lead@octocorp.internal
+  requiresTwoFactorAuthentication: true
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRuleset
+metadata:
+  name: analytics-branch-governance
+  organization: octocorp-analytics
+spec:
+  name: analytics-branch-governance
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 1
+        dismiss_stale_reviews_on_push: true
+    - type: required_signatures
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRunnerGroup
+metadata:
+  name: gpu-a100-ml-runners
+  organization: octocorp-analytics
+spec:
+  visibility: all
+  allows_public_repositories: false
+---
+apiVersion: github.iac/v1alpha1
+kind: OrganizationWebhook
+metadata:
+  name: dataops-slack-stream
+  organization: octocorp-analytics
+spec:
+  config:
+    url: https://hooks.slack.com/services/T00/B00/XXXXX
+    content_type: json
+    secret: env:SLACK_WEBHOOK_SECRET
+  events:
+    - release
+    - repository
+  active: true

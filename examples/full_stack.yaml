@@ -68,6 +68,69 @@ spec:
   privacy: closed
 
 ---
+# Organization-Wide Governance Ruleset (Applies across all repositories in org)
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRuleset
+metadata:
+  name: org-default-protection
+  organization: octocorp-cloud
+spec:
+  name: org-default-protection
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 1
+        dismiss_stale_reviews_on_push: true
+    - type: non_fast_forward
+
+---
+# Organization Actions Configuration Variable
+apiVersion: github.iac/v1alpha1
+kind: OrganizationVariable
+metadata:
+  name: DOCKER_REGISTRY_URL
+  organization: octocorp-cloud
+spec:
+  value: ghcr.io/octocorp-cloud
+  visibility: all
+
+---
+# Organization Actions Self-Hosted Runner Group
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRunnerGroup
+metadata:
+  name: k8s-build-runners
+  organization: octocorp-cloud
+spec:
+  visibility: all
+  allows_public_repositories: false
+
+---
+# Organization Audit & Security Event Webhook
+apiVersion: github.iac/v1alpha1
+kind: OrganizationWebhook
+metadata:
+  name: siem-audit-webhook
+  organization: octocorp-cloud
+spec:
+  name: web
+  config:
+    url: https://siem.octocorp.internal/github-events
+    content_type: json
+    secret: env:ORG_WEBHOOK_SECRET
+  events:
+    - repository
+    - member
+    - team
+  active: true
+
+---
 # Phase 4: Repository and Branch Ruleset Constructs
 apiVersion: github.iac/v1alpha1
 kind: Repository
@@ -142,6 +205,19 @@ metadata:
 spec:
   value: env:DATADOG_API_KEY
   visibility: all
+
+---
+# Organization Actions Secret with Selected Repository Scope
+apiVersion: github.iac/v1alpha1
+kind: OrganizationSecret
+metadata:
+  name: SNYK_TOKEN
+  organization: octocorp-cloud
+spec:
+  value: env:SNYK_API_TOKEN
+  visibility: selected
+  selected_repository_ids:
+    - 554433
 
 ---
 # Phase 2: Repository Actions Secret (Libsodium Encrypted)

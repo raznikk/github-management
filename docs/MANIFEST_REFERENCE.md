@@ -27,12 +27,18 @@ spec:
 ## 1. Enterprise Constructs (GHEC, GHES, EMU)
 
 ### `EnterprisePolicy`
-Configures enterprise-wide policies for GitHub Actions, fork permissions, repository creation, etc.
+Configures enterprise-wide policies for GitHub Actions execution permissions, trusted action filters, repository creation limits, forking permissions, and mandatory 2FA.
 
 - **Metadata Scopes:** `enterprise` (required)
 - **Key Spec Properties:**
   - `enabled_repositories` (str): `"all"`, `"none"`, or `"selected"`.
   - `allowed_actions` (str): `"all"`, `"local_only"`, or `"selected"`.
+  - `selected_actions` (dict):
+    - `github_owned_allowed` (bool): Allow actions created by GitHub.
+    - `verified_allowed` (bool): Allow actions by verified marketplace creators.
+    - `patterns_allowed` (list[str]): Allowed action creator patterns (e.g. `["actions/*", "octocorp/*"]`).
+  - `members_can_fork_private_repositories` (bool): Prevent exfiltration via private forks.
+  - `two_factor_requirement` (bool): Enforce mandatory two-factor authentication across all member organizations.
 
 ```yaml
 apiVersion: github.iac/v1alpha1
@@ -43,6 +49,14 @@ metadata:
 spec:
   enabled_repositories: all
   allowed_actions: selected
+  selected_actions:
+    github_owned_allowed: true
+    verified_allowed: true
+    patterns_allowed:
+      - "actions/*"
+      - "octocorp/*"
+  members_can_fork_private_repositories: false
+  two_factor_requirement: true
 ```
 
 ---
@@ -119,13 +133,18 @@ spec:
 ---
 
 ### `EnterpriseSecuritySetting`
-Configures enterprise automated security analysis baselines across all member repositories.
+Configures enterprise-wide automated security analysis baselines across all member repositories (GitHub Advanced Security, Secret Scanning, Push Protection, and Dependabot).
 
 - **Metadata Scopes:** `enterprise` (required)
 - **Key Spec Properties:**
-  - `advanced_security_enabled_for_new_repositories` (bool)
-  - `secret_scanning_enabled_for_new_repositories` (bool)
-  - `secret_scanning_push_protection_enabled_for_new_repositories` (bool)
+  - `advanced_security_enabled_for_new_repositories` (bool): Enable GitHub Advanced Security (GHAS) licensing baseline.
+  - `secret_scanning_enabled_for_new_repositories` (bool): Enable automated secret scanning on commit pushes.
+  - `secret_scanning_push_protection_enabled_for_new_repositories` (bool): Block developer pushes containing unencrypted API tokens.
+  - `secret_scanning_validity_checks_enabled` (bool): Perform live token verification with partner token issuers.
+  - `dependabot_alerts_enabled_for_new_repositories` (bool): Enable CVE vulnerability alerts for repository dependencies.
+  - `dependabot_security_updates_enabled_for_new_repositories` (bool): Automatically submit automated pull requests to patch known CVEs.
+  - `dependency_graph_enabled_for_new_repositories` (bool): Maintain continuous Software Bill of Materials (SBOM).
+  - `code_scanning_default_setup_enabled_for_new_repositories` (bool): Activate automated zero-configuration CodeQL code scanning.
 
 ```yaml
 apiVersion: github.iac/v1alpha1
@@ -137,6 +156,47 @@ spec:
   advanced_security_enabled_for_new_repositories: true
   secret_scanning_enabled_for_new_repositories: true
   secret_scanning_push_protection_enabled_for_new_repositories: true
+  secret_scanning_validity_checks_enabled: true
+  dependabot_alerts_enabled_for_new_repositories: true
+  dependabot_security_updates_enabled_for_new_repositories: true
+  dependency_graph_enabled_for_new_repositories: true
+  code_scanning_default_setup_enabled_for_new_repositories: true
+```
+
+---
+
+### `EnterpriseRuleset`
+Declares enterprise-wide repository rulesets that enforce governance (mandatory branch protections, code reviews, status checks, commit signatures, linear history) across all organizations and repositories in the enterprise.
+
+- **Metadata Scopes:** `enterprise` (required), `name` (ruleset name)
+- **Key Spec Properties:**
+  - `target` (str): `"branch"` or `"tag"`.
+  - `enforcement` (str): `"active"`, `"evaluate"`, or `"disabled"`.
+  - `conditions` (dict): Target branch ref inclusions (`ref_name`) and repository selection filter.
+  - `rules` (list[dict]): Rules definitions (`pull_request`, `required_status_checks`, `required_signatures`, etc.).
+  - `bypass_actors` (optional list[dict]): Enterprise administrative actors exempted from ruleset enforcement.
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseRuleset
+metadata:
+  name: enterprise-global-branch-policy
+  enterprise: octocorp
+spec:
+  name: enterprise-global-branch-policy
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+        - refs/heads/release/*
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 2
+        dismiss_stale_reviews_on_push: true
+    - type: required_signatures
 ```
 
 ---
@@ -298,7 +358,126 @@ metadata:
   organization: octocorp-cloud
 spec:
   value: env:DD_SECRET_VAL
+  visibility: selected
+  selected_repository_ids:
+    - 554433
+```
+
+---
+
+### `OrganizationVariable`
+Manages organization-wide plain-text GitHub Actions configuration variables and visibility scoping.
+
+- **Metadata Scopes:** `organization` (required), `name` (variable name)
+- **Key Spec Properties:**
+  - `value` (str): Plain-text variable value or reference.
+  - `visibility` (str): `"all"`, `"private"`, or `"selected"`.
+  - `selected_repository_ids` (optional list[int]): List of repository IDs when visibility is `"selected"`.
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: OrganizationVariable
+metadata:
+  name: CI_CLUSTER_ENDPOINT
+  organization: octocorp-cloud
+spec:
+  value: https://k8s-prod.octocorp.internal
   visibility: all
+```
+
+---
+
+### `OrganizationRuleset`
+Declares organization-wide repository and branch rulesets enforcing governance, commit signatures, code reviews, and status checks across all or selected organization repositories.
+
+- **Metadata Scopes:** `organization` (required), `name` (ruleset name)
+- **Key Spec Properties:**
+  - `target` (str): `"branch"` or `"tag"`.
+  - `enforcement` (str): `"active"`, `"evaluate"`, or `"disabled"`.
+  - `conditions` (dict): Target branch ref inclusions (`ref_name`) and repository selection filter (`repository_name` or `repository_id`).
+  - `rules` (list[dict]): Organization-wide governance rules (`pull_request`, `required_status_checks`, `required_signatures`, etc.).
+  - `bypass_actors` (optional list[dict]): Actors exempted from the ruleset (e.g. GitHub App integration or organization admin team).
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRuleset
+metadata:
+  name: org-wide-branch-governance
+  organization: octocorp-cloud
+spec:
+  name: org-wide-branch-governance
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+        - refs/heads/release/*
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 2
+        dismiss_stale_reviews_on_push: true
+        require_code_owner_review: true
+    - type: required_signatures
+```
+
+---
+
+### `OrganizationRunnerGroup`
+Configures organization-level self-hosted runner groups, repository access boundaries, and public repository execution safeguards.
+
+- **Metadata Scopes:** `organization` (required), `name` (runner group name)
+- **Key Spec Properties:**
+  - `visibility` (str): `"all"`, `"selected"`, or `"private"`.
+  - `selected_repository_ids` (optional list[int]): Specific repository IDs allowed access when visibility is `"selected"`.
+  - `allows_public_repositories` (bool): Security safeguard preventing runners on public repositories (default `false`).
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: OrganizationRunnerGroup
+metadata:
+  name: platform-gpu-runners
+  organization: octocorp-cloud
+spec:
+  visibility: selected
+  selected_repository_ids:
+    - 554433
+  allows_public_repositories: false
+```
+
+---
+
+### `OrganizationWebhook`
+Configures organization-level event webhooks for enterprise integrations, CI/CD event bridges, and audit logging sinks.
+
+- **Metadata Scopes:** `organization` (required), `name` (webhook identifier)
+- **Key Spec Properties:**
+  - `config` (dict):
+    - `url` (str): Target webhook endpoint URL.
+    - `content_type` (str): `"json"` or `"form"`.
+    - `secret` (str): Shared secret payload signature (supports `env:VAR`).
+    - `insecure_ssl` (str): `"0"` (enforced) or `"1"` (insecure).
+  - `events` (list[str]): List of subscribed GitHub events (e.g. `push`, `pull_request`, `repository`, `member`).
+  - `active` (bool): Whether webhook deliveries are enabled.
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: OrganizationWebhook
+metadata:
+  name: org-ops-webhook
+  organization: octocorp-cloud
+spec:
+  config:
+    url: https://events.octocorp.internal/github-webhook
+    content_type: json
+    secret: env:ORG_WEBHOOK_SECRET
+    insecure_ssl: "0"
+  events:
+    - push
+    - pull_request
+    - repository
+  active: true
 ```
 
 ---

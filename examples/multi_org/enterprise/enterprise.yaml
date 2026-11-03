@@ -1,0 +1,84 @@
+apiVersion: github.iac/v1alpha1
+kind: EnterprisePolicy
+metadata:
+  name: global-actions-policy
+  enterprise: octocorp
+spec:
+  enabled_repositories: all
+  allowed_actions: selected
+  selected_actions:
+    github_owned_allowed: true
+    verified_allowed: true
+    patterns_allowed:
+      - "actions/*"
+      - "github/*"
+      - "octocorp/*"
+  members_can_fork_private_repositories: false
+  two_factor_requirement: true
+---
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseSecuritySetting
+metadata:
+  name: baseline-security
+  enterprise: octocorp
+spec:
+  # GitHub Advanced Security (GHAS) enterprise-wide baseline
+  advanced_security_enabled_for_new_repositories: true
+  secret_scanning_enabled_for_new_repositories: true
+  secret_scanning_push_protection_enabled_for_new_repositories: true
+  secret_scanning_validity_checks_enabled: true
+  dependabot_alerts_enabled_for_new_repositories: true
+  dependabot_security_updates_enabled_for_new_repositories: true
+  dependency_graph_enabled_for_new_repositories: true
+  code_scanning_default_setup_enabled_for_new_repositories: true
+---
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseAuditStream
+metadata:
+  name: splunk-enterprise-sink
+  enterprise: octocorp
+spec:
+  stream_type: Splunk
+  settings:
+    domain: https://splunk.internal:8088
+    token: env:SPLUNK_HEC_TOKEN
+  enabled: true
+---
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseRuleset
+metadata:
+  name: enterprise-global-branch-policy
+  enterprise: octocorp
+spec:
+  name: enterprise-global-branch-policy
+  target: branch
+  enforcement: active
+  conditions:
+    ref_name:
+      include:
+        - refs/heads/main
+        - refs/heads/release/*
+  rules:
+    - type: pull_request
+      parameters:
+        required_approving_review_count: 2
+        dismiss_stale_reviews_on_push: true
+    - type: required_signatures
+---
+apiVersion: github.iac/v1alpha1
+kind: EMUExternalGroup
+metadata:
+  name: Platform-Engineering-Directory
+  enterprise: octocorp
+spec:
+  externalId: okta-group-platform-001
+  displayName: Platform-Engineering-Directory
+---
+apiVersion: github.iac/v1alpha1
+kind: EMUExternalGroup
+metadata:
+  name: Analytics-Engineering-Directory
+  enterprise: octocorp
+spec:
+  externalId: okta-group-analytics-002
+  displayName: Analytics-Engineering-Directory
