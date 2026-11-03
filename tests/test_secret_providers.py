@@ -4,13 +4,14 @@ import base64
 
 import pytest
 import respx
+from nacl import public
+
 from gh_iac.core.client import GitHubClient
 from gh_iac.core.manifest import GitHubManifest, ManifestMetadata
 from gh_iac.core.target import TargetConfig
 from gh_iac.providers.base import ActionType
 from gh_iac.providers.organization import OrganizationSecretProvider
 from gh_iac.providers.repository import RepositorySecretProvider
-from nacl import public
 
 
 @respx.mock

@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Dict, List, Optional, Type
 
 import yaml
+
 from gh_iac.core.client import GitHubClient
 from gh_iac.core.dag import DependencyGraph
 from gh_iac.core.manifest import GitHubManifest

@@ -1,6 +1,7 @@
 """Unit tests for credential and secret resolution."""
 
 import pytest
+
 from gh_iac.core.credentials import (
     CredentialResolver,
     SecretString,

@@ -7,6 +7,7 @@ import pytest
 import respx
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import rsa
+
 from gh_iac.core.auth import GitHubAppAuthenticator
 
 

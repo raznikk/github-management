@@ -4,8 +4,9 @@ import json
 from pathlib import Path
 
 import respx
-from gh_iac.cli.main import app
 from typer.testing import CliRunner
+
+from gh_iac.cli.main import app
 
 runner = CliRunner()
 

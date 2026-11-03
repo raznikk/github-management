@@ -3,8 +3,9 @@
 import json
 from typing import List
 
-from gh_iac.providers.base import ActionType, ResourcePlan
 from rich.console import Console
+
+from gh_iac.providers.base import ActionType, ResourcePlan
 
 
 def format_plan_json(plans: List[ResourcePlan]) -> str:
