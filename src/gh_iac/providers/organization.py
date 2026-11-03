@@ -201,3 +201,99 @@ class TeamProvider(BaseProvider):
             applied_spec=desired,
             last_updated=datetime.now(timezone.utc).isoformat(),
         )
+
+
+class OrganizationSecretProvider(BaseProvider):
+    """
+    Manages GitHub Organization Actions secrets with client-side Libsodium encryption.
+    REST: /orgs/{org}/actions/secrets/{secret_name}
+    """
+
+    def read(self, manifest: GitHubManifest) -> Optional[ResourceState]:
+        org = manifest.metadata.organization
+        secret_name = manifest.metadata.name
+        try:
+            sec_info = self.client.rest("GET", f"/orgs/{org}/actions/secrets/{secret_name}")
+            if not isinstance(sec_info, dict):
+                return None
+            return ResourceState(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                attributes={
+                    "name": sec_info.get("name"),
+                    "visibility": sec_info.get("visibility"),
+                    "created_at": sec_info.get("created_at"),
+                    "updated_at": sec_info.get("updated_at"),
+                },
+                applied_spec={"visibility": sec_info.get("visibility")},
+                last_updated=datetime.now(timezone.utc).isoformat(),
+            )
+        except Exception:
+            return None
+
+    def plan(self, manifest: GitHubManifest, current: Optional[ResourceState]) -> ResourcePlan:
+        desired = manifest.spec
+        if not current:
+            return ResourcePlan(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                action=ActionType.CREATE,
+                diff={"desired": {"visibility": desired.get("visibility", "all"), "value": "******"}},
+                current_state=None,
+                desired_state={"visibility": desired.get("visibility", "all"), "value": "******"},
+            )
+
+        diff: Dict[str, Any] = {}
+        if "visibility" in desired and current.attributes.get("visibility") != desired["visibility"]:
+            diff["visibility"] = {"old": current.attributes.get("visibility"), "new": desired["visibility"]}
+
+        # Secrets are always re-applied on update
+        diff["value"] = {"old": "******", "new": "******"}
+        return ResourcePlan(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            action=ActionType.UPDATE,
+            diff=diff,
+            current_state=current.attributes,
+            desired_state={"visibility": desired.get("visibility", "all"), "value": "******"},
+        )
+
+    def apply(self, plan: ResourcePlan, manifest: GitHubManifest) -> ResourceState:
+        from gh_iac.core.credentials import CredentialResolver, encrypt_github_secret
+
+        org = manifest.metadata.organization
+        secret_name = manifest.metadata.name
+        desired = manifest.spec
+
+        # 1. Resolve raw secret value safely
+        resolver = CredentialResolver()
+        raw_secret = resolver.resolve(desired.get("value", ""))
+
+        # 2. Get Organization Actions public key
+        key_data = self.client.rest("GET", f"/orgs/{org}/actions/secrets/public-key")
+        public_key_b64 = key_data["key"]
+        key_id = key_data["key_id"]
+
+        # 3. Libsodium sealed box encryption
+        encrypted_val = encrypt_github_secret(public_key_b64, raw_secret)
+
+        # 4. PUT secret
+        payload = {
+            "encrypted_value": encrypted_val,
+            "key_id": key_id,
+            "visibility": desired.get("visibility", "all"),
+        }
+        self.client.rest("PUT", f"/orgs/{org}/actions/secrets/{secret_name}", json_data=payload)
+
+        return ResourceState(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            attributes={
+                "name": secret_name,
+                "visibility": desired.get("visibility", "all"),
+                "value": "******",
+            },
+            applied_spec={"visibility": desired.get("visibility", "all"), "value": "******"},
+            last_updated=datetime.now(timezone.utc).isoformat(),
+        )
+

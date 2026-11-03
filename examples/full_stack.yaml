@@ -105,3 +105,141 @@ spec:
     - type: required_status_checks
       parameters:
         strict_required_status_checks_policy: true
+
+---
+# Phase 2: Enterprise Audit Log Streaming
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseAuditStream
+metadata:
+  name: splunk-audit-stream
+  enterprise: octocorp
+spec:
+  stream_type: Splunk
+  settings:
+    domain: https://splunk.internal:8088
+    token: env:SPLUNK_HEC_TOKEN
+  enabled: true
+
+---
+# Phase 2: EMU IdP Group to Organization Team Link
+apiVersion: github.iac/v1alpha1
+kind: EMUTeamMapping
+metadata:
+  name: cloud-platform-idp-link
+  enterprise: octocorp
+  organization: octocorp-cloud
+spec:
+  team_slug: cloud-platform-team
+  group_id: 998822
+
+---
+# Phase 2: Organization Actions Secret (Libsodium Encrypted)
+apiVersion: github.iac/v1alpha1
+kind: OrganizationSecret
+metadata:
+  name: DATADOG_API_KEY
+  organization: octocorp-cloud
+spec:
+  value: env:DATADOG_API_KEY
+  visibility: all
+
+---
+# Phase 2: Repository Actions Secret (Libsodium Encrypted)
+apiVersion: github.iac/v1alpha1
+kind: RepositorySecret
+metadata:
+  name: PROD_DATABASE_URL
+  organization: octocorp-cloud
+  repository: core-infrastructure
+spec:
+  value: env:PROD_DATABASE_URL
+
+---
+# Phase 2: EMU SCIM User Provisioning
+apiVersion: github.iac/v1alpha1
+kind: EMUSCIMUser
+metadata:
+  name: jdoe_octocorp
+  enterprise: octocorp
+spec:
+  userName: jdoe_octocorp
+  name:
+    givenName: Jane
+    familyName: Doe
+  emails:
+    - value: jdoe@octocorp.com
+      primary: true
+  roles:
+    - value: enterprise_owner
+  active: true
+
+---
+# Phase 2: Enterprise Custom Role
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseCustomRole
+metadata:
+  name: enterprise-compliance-auditor
+  enterprise: octocorp
+spec:
+  description: Enterprise-wide compliance auditor permissions
+  base_role: read
+  permissions:
+    - view_audit_log
+    - view_enterprise_policies
+
+---
+# Phase 2: Enterprise Actions Runner Group
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseRunnerGroup
+metadata:
+  name: pci-isolated-runners
+  enterprise: octocorp
+spec:
+  visibility: selected
+  selected_organization_ids:
+    - 10101
+  allows_public_repositories: false
+
+---
+# Phase 2: Enterprise-Scoped GitHub App
+apiVersion: github.iac/v1alpha1
+kind: GitHubApp
+metadata:
+  name: enterprise-compliance-daemon
+  enterprise: octocorp
+spec:
+  url: https://compliance.octocorp.internal
+  description: Enterprise compliance and audit daemon
+  public: false
+  default_permissions:
+    enterprise_administration: read
+    enterprise_audit_log: read
+  default_events:
+    - audit_log_entry
+  output_credentials:
+    private_key_file: ./secrets/enterprise-compliance.pem
+
+---
+# Phase 2: Organization-Scoped GitHub App
+apiVersion: github.iac/v1alpha1
+kind: GitHubApp
+metadata:
+  name: release-orchestrator-bot
+  organization: octocorp-cloud
+spec:
+  url: https://release.octocorp.internal
+  description: CI/CD release orchestrator
+  public: false
+  default_permissions:
+    contents: write
+    pull_requests: write
+    actions: read
+  default_events:
+    - push
+    - pull_request
+    - release
+  output_credentials:
+    private_key_file: ./secrets/release-orchestrator.pem
+
+
+

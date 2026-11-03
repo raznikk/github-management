@@ -9,28 +9,55 @@ from gh_iac.core.client import GitHubClient
 from gh_iac.core.manifest import GitHubManifest
 from gh_iac.core.state import ResourceState, StateManager
 from gh_iac.providers.base import BaseProvider, ResourcePlan
-from gh_iac.providers.enterprise import EMUExternalGroupProvider, EnterprisePolicyProvider
+from gh_iac.providers.enterprise import (
+    EMUExternalGroupProvider,
+    EMUSCIMUserProvider,
+    EMUTeamMappingProvider,
+    EnterpriseAuditStreamProvider,
+    EnterpriseCustomRoleProvider,
+    EnterpriseIPAllowListProvider,
+    EnterprisePolicyProvider,
+    EnterpriseRunnerGroupProvider,
+    GitHubAppProvider,
+)
 from gh_iac.providers.governance import (
     CustomRepositoryRoleProvider,
     EnterpriseSecuritySettingProvider,
 )
-from gh_iac.providers.organization import OrganizationProvider, TeamProvider
-from gh_iac.providers.repository import RepositoryProvider, RepositoryRulesetProvider
+from gh_iac.providers.organization import (
+    OrganizationProvider,
+    OrganizationSecretProvider,
+    TeamProvider,
+)
+from gh_iac.providers.repository import (
+    RepositoryProvider,
+    RepositoryRulesetProvider,
+    RepositorySecretProvider,
+)
 
 # Priority rank for topological ordering (lower number executes first)
 KIND_PRIORITY = {
     # 1. Enterprise constructs
     "EnterprisePolicy": 10,
     "EnterpriseAccount": 10,
+    "EnterpriseAuditStream": 15,
+    "EnterpriseIPAllowList": 15,
+    "EnterpriseRunnerGroup": 15,
+    "EMUSCIMUser": 18,
     "EMUExternalGroup": 20,
+    "EMUTeamMapping": 25,
+    "GitHubApp": 28,
     # 2. Governance constructs
     "EnterpriseSecuritySetting": 30,
+    "EnterpriseCustomRole": 35,
     "CustomRepositoryRole": 40,
     # 3. Organization & Team constructs
     "Organization": 50,
+    "OrganizationSecret": 55,
     "Team": 60,
     # 4. Repository & Ruleset constructs
     "Repository": 70,
+    "RepositorySecret": 75,
     "RepositoryRuleset": 80,
 }
 
@@ -38,12 +65,21 @@ KIND_PRIORITY = {
 PROVIDER_REGISTRY: Dict[str, Type[BaseProvider]] = {
     "EnterprisePolicy": EnterprisePolicyProvider,
     "EnterpriseAccount": EnterprisePolicyProvider,
+    "EnterpriseAuditStream": EnterpriseAuditStreamProvider,
+    "EnterpriseIPAllowList": EnterpriseIPAllowListProvider,
+    "EnterpriseRunnerGroup": EnterpriseRunnerGroupProvider,
+    "EMUSCIMUser": EMUSCIMUserProvider,
     "EMUExternalGroup": EMUExternalGroupProvider,
+    "EMUTeamMapping": EMUTeamMappingProvider,
+    "GitHubApp": GitHubAppProvider,
     "EnterpriseSecuritySetting": EnterpriseSecuritySettingProvider,
+    "EnterpriseCustomRole": EnterpriseCustomRoleProvider,
     "CustomRepositoryRole": CustomRepositoryRoleProvider,
     "Organization": OrganizationProvider,
+    "OrganizationSecret": OrganizationSecretProvider,
     "Team": TeamProvider,
     "Repository": RepositoryProvider,
+    "RepositorySecret": RepositorySecretProvider,
     "RepositoryRuleset": RepositoryRulesetProvider,
 }
 

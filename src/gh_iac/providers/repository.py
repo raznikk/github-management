@@ -266,3 +266,91 @@ class RepositoryRulesetProvider(BaseProvider):
             applied_spec=desired,
             last_updated=datetime.now(timezone.utc).isoformat(),
         )
+
+
+class RepositorySecretProvider(BaseProvider):
+    """
+    Manages GitHub Repository Actions secrets with client-side Libsodium encryption.
+    REST: /repos/{owner}/{repo}/actions/secrets/{secret_name}
+    """
+
+    def read(self, manifest: GitHubManifest) -> Optional[ResourceState]:
+        org = manifest.metadata.organization
+        repo = manifest.metadata.repository or manifest.metadata.name
+        secret_name = manifest.metadata.name
+        try:
+            sec_info = self.client.rest("GET", f"/repos/{org}/{repo}/actions/secrets/{secret_name}")
+            if not isinstance(sec_info, dict):
+                return None
+            return ResourceState(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                attributes={
+                    "name": sec_info.get("name"),
+                    "created_at": sec_info.get("created_at"),
+                    "updated_at": sec_info.get("updated_at"),
+                },
+                applied_spec={},
+                last_updated=datetime.now(timezone.utc).isoformat(),
+            )
+        except Exception:
+            return None
+
+    def plan(self, manifest: GitHubManifest, current: Optional[ResourceState]) -> ResourcePlan:
+        if not current:
+            return ResourcePlan(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                action=ActionType.CREATE,
+                diff={"desired": {"value": "******"}},
+                current_state=None,
+                desired_state={"value": "******"},
+            )
+
+        return ResourcePlan(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            action=ActionType.UPDATE,
+            diff={"value": {"old": "******", "new": "******"}},
+            current_state=current.attributes,
+            desired_state={"value": "******"},
+        )
+
+    def apply(self, plan: ResourcePlan, manifest: GitHubManifest) -> ResourceState:
+        from gh_iac.core.credentials import CredentialResolver, encrypt_github_secret
+
+        org = manifest.metadata.organization
+        repo = manifest.metadata.repository or manifest.metadata.name
+        secret_name = manifest.metadata.name
+        desired = manifest.spec
+
+        # 1. Resolve raw secret value safely
+        resolver = CredentialResolver()
+        raw_secret = resolver.resolve(desired.get("value", ""))
+
+        # 2. Get Repository Actions public key
+        key_data = self.client.rest("GET", f"/repos/{org}/{repo}/actions/secrets/public-key")
+        public_key_b64 = key_data["key"]
+        key_id = key_data["key_id"]
+
+        # 3. Libsodium sealed box encryption
+        encrypted_val = encrypt_github_secret(public_key_b64, raw_secret)
+
+        # 4. PUT secret
+        payload = {
+            "encrypted_value": encrypted_val,
+            "key_id": key_id,
+        }
+        self.client.rest("PUT", f"/repos/{org}/{repo}/actions/secrets/{secret_name}", json_data=payload)
+
+        return ResourceState(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            attributes={
+                "name": secret_name,
+                "value": "******",
+            },
+            applied_spec={"value": "******"},
+            last_updated=datetime.now(timezone.utc).isoformat(),
+        )
+

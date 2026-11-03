@@ -12,7 +12,8 @@ class ResourceState(BaseModel):
     resource_id: str
     kind: str
     node_id: Optional[str] = None  # GitHub GraphQL Global Node ID
-    numeric_id: Optional[int] = None
+    numeric_id: Optional[Union[int, str]] = None
+
     url: Optional[str] = None
     attributes: Dict[str, Any] = Field(default_factory=dict)
     applied_spec: Dict[str, Any] = Field(default_factory=dict)

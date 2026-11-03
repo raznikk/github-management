@@ -43,19 +43,41 @@ class TargetConfig(BaseModel):
         default=True,
         description="Whether to verify SSL certificates (useful for self-signed GHES)",
     )
+    ca_bundle: Optional[str] = Field(
+        default=None,
+        description="Path to custom CA bundle certificate file for air-gapped or internal TLS",
+    )
+    proxy: Optional[str] = Field(
+        default=None,
+        description="HTTP or HTTPS proxy URL (e.g. http://proxy.internal:8080)",
+    )
 
     @classmethod
-    def create_for_ghec(cls, token: str, enterprise_slug: Optional[str] = None) -> "TargetConfig":
+    def create_for_ghec(
+        cls,
+        token: str,
+        enterprise_slug: Optional[str] = None,
+        ca_bundle: Optional[str] = None,
+        proxy: Optional[str] = None,
+    ) -> "TargetConfig":
         return cls(
             environment=TargetEnvironment.GHEC,
             base_url="https://api.github.com",
             graphql_url="https://api.github.com/graphql",
             token=token,
             enterprise_slug=enterprise_slug,
+            ca_bundle=ca_bundle,
+            proxy=proxy,
         )
 
     @classmethod
-    def create_for_emu(cls, token: str, enterprise_slug: str) -> "TargetConfig":
+    def create_for_emu(
+        cls,
+        token: str,
+        enterprise_slug: str,
+        ca_bundle: Optional[str] = None,
+        proxy: Optional[str] = None,
+    ) -> "TargetConfig":
         return cls(
             environment=TargetEnvironment.GHEC_EMU,
             base_url="https://api.github.com",
@@ -63,10 +85,20 @@ class TargetConfig(BaseModel):
             token=token,
             enterprise_slug=enterprise_slug,
             scim_base_url=f"https://api.github.com/scim/v2/enterprises/{enterprise_slug}",
+            ca_bundle=ca_bundle,
+            proxy=proxy,
         )
 
     @classmethod
-    def create_for_ghes(cls, hostname: str, token: str, enterprise_slug: Optional[str] = None, verify_ssl: bool = True) -> "TargetConfig":
+    def create_for_ghes(
+        cls,
+        hostname: str,
+        token: str,
+        enterprise_slug: Optional[str] = None,
+        verify_ssl: bool = True,
+        ca_bundle: Optional[str] = None,
+        proxy: Optional[str] = None,
+    ) -> "TargetConfig":
         clean_host = hostname.rstrip("/")
         if not clean_host.startswith("http://") and not clean_host.startswith("https://"):
             clean_host = f"https://{clean_host}"
@@ -77,4 +109,6 @@ class TargetConfig(BaseModel):
             token=token,
             enterprise_slug=enterprise_slug,
             verify_ssl=verify_ssl,
+            ca_bundle=ca_bundle,
+            proxy=proxy,
         )

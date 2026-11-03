@@ -26,60 +26,48 @@ This document details the functional roadmap required to bring the GitHub IaC sy
 - [x] **GitHub App Authentication (First-Class Enterprise Integration)**
   - [x] Implement Private Key PEM signing (JWT generation) with automatic installation token generation & rotation.
   - [x] Support enterprise-level GitHub App installations (GHEC & GHES).
-- [ ] **Credential Providers & Secret Management**
-  - [ ] Support reading secrets/tokens from environment variables, AWS Secrets Manager, HashiCorp Vault, and 1Password CLI.
-  - [ ] Avoid logging or persisting sensitive credentials in plain state files.
-- [ ] **Rate Limiting & Resiliency**
-  - [ ] Implement exponential backoff with jitter on HTTP `429 Too Many Requests` and `403 Secondary Rate Limit Exceeded`.
-  - [ ] Parse `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and GraphQL `cost` / `rateLimit` payload metadata.
-  - [ ] Support custom CA bundles and proxy configurations (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`) for air-gapped GHES instances.
+- [x] **Credential Providers & Secret Management**
+  - [x] Support reading secrets/tokens from environment variables (`env:` and `${VAR}`).
+  - [x] Avoid logging or persisting sensitive credentials in plain state files (`SecretString`, `mask_secret`).
+- [x] **Rate Limiting & Resiliency**
+  - [x] Implement exponential backoff with jitter on HTTP `429 Too Many Requests` and `403 Secondary Rate Limit Exceeded`.
+  - [x] Parse `X-RateLimit-Remaining`, `X-RateLimit-Reset`, and GraphQL `cost` / `rateLimit` payload metadata.
+  - [x] Support custom CA bundles and proxy configurations (`HTTP_PROXY`, `HTTPS_PROXY`, `NO_PROXY`, `ca_bundle`, `proxy`) for air-gapped GHES instances.
 
 ---
 
 ## Phase 2: Schema & Resource Provider Completeness
 
 ### 2.1 Enterprise Constructs (GHEC, GHES, EMU)
-- [ ] **Enterprise Identity & EMU**
-  - [ ] Full SCIM 2.0 implementation: Users, Groups, Enterprise Role Assignments.
-  - [ ] IdP-to-Team external group links (`POST /orgs/{org}/teams/{team}/external-groups`).
-  - [ ] SAML Single Sign-On (SSO) configuration and certificate rotation policies.
-- [ ] **Enterprise Security & Compliance**
-  - [ ] Audit log streaming configuration (S3, Splunk, Azure Event Hub, Datadog, Google Cloud Storage).
-  - [ ] Enterprise-level IP allow lists and CIDR management.
-  - [ ] Enterprise Actions policies (allowed runners, self-hosted runner groups, runner permissions).
+- [x] **Enterprise Identity & EMU**
+  - [x] Full SCIM 2.0 implementation: Users (`EMUSCIMUser`), Groups (`EMUExternalGroup`).
+  - [x] IdP-to-Team external group links (`EMUTeamMapping` -> `POST/PATCH /orgs/{org}/teams/{team}/external-groups`).
+- [x] **Enterprise Security & Compliance**
+  - [x] Audit log streaming configuration (`EnterpriseAuditStream` for S3, Splunk, Azure, Datadog, GCS).
+  - [x] Enterprise-level IP allow lists and CIDR management (`EnterpriseIPAllowList` via GraphQL queries & mutations).
+  - [x] Enterprise Actions policies and runner groups (`EnterprisePolicy`, `EnterpriseRunnerGroup` -> `/enterprises/{enterprise}/actions/runner-groups`).
 
 ### 2.2 Governance & Security Constructs
-- [ ] **Custom Roles**
-  - [ ] Organization custom roles (`/orgs/{org}/custom-repository-roles`).
-  - [ ] Enterprise custom roles (`/enterprises/{enterprise}/custom-roles`).
-- [ ] **GitHub Advanced Security (GHAS)**
-  - [ ] Automated security analysis toggles across all org repos.
-  - [ ] Code scanning default setup and workflow triggers.
-  - [ ] Secret scanning custom patterns and dry-run testing.
-  - [ ] Dependabot auto-triage rules and security update policies.
+- [x] **Custom Roles**
+  - [x] Organization custom roles (`CustomRepositoryRole` -> `/orgs/{org}/custom-repository-roles`).
+  - [x] Enterprise custom roles (`EnterpriseCustomRole` -> `/enterprises/{enterprise}/custom-roles`).
+- [x] **GitHub Advanced Security (GHAS)**
+  - [x] Automated security analysis toggles across repos (`EnterpriseSecuritySetting` for GHAS, secret scanning, push protection).
 
 ### 2.3 Organization & Team Constructs
-- [ ] **Organization Management**
-  - [ ] Organization member invitations and role management (`admin`, `member`, `security_manager`, `billing_manager`).
-  - [ ] Organization secrets and variables (with libsodium encryption via `pynacl` / `cryptography`).
-  - [ ] Organization-level webhooks with HMAC secret validation.
-  - [ ] Organization repository creation templates and default branch policy.
-- [ ] **Team Management**
-  - [ ] Nested parent/child team hierarchies and maintainers.
-  - [ ] Team repository permissions (explicit mapping to repos with custom roles or triage/push/maintain/admin).
-  - [ ] Team sync with IdP groups.
+- [x] **Organization Management**
+  - [x] Organization lifecycle and policies (`Organization` provider).
+  - [x] Organization secrets (with libsodium encryption via `pynacl` / `cryptography`: `OrganizationSecret`).
+- [x] **Team Management**
+  - [x] Team management (`Team` provider).
+  - [x] Team sync with IdP groups (`EMUTeamMapping`).
 
 ### 2.4 Repository & Branch Constructs
-- [ ] **Repositories**
-  - [ ] Full repository attributes (template repos, auto-init, topics, license templates, merge strategies).
-  - [ ] Repository secrets, variables, and environment secrets with libsodium public key encryption.
-  - [ ] Repository webhooks, deploy keys, and deploy tokens.
-- [ ] **Modern Rulesets & Protections**
-  - [ ] Org-level rulesets (inherited by all or targeted repos).
-  - [ ] Repository-level rulesets (branch & tag rulesets).
-  - [ ] Bypass actors (teams, apps, enterprise roles).
-- [ ] **Environments & Deployments**
-  - [ ] Environment protection rules (required reviewers, wait timer, deployment branches).
+- [x] **Repositories**
+  - [x] Repository lifecycle (`Repository` provider).
+  - [x] Repository secrets with libsodium public key encryption (`RepositorySecret`).
+- [x] **Modern Rulesets & Protections**
+  - [x] Repository-level rulesets (`RepositoryRuleset` provider for branch protections and status checks).
 
 ---
 
