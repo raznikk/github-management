@@ -144,4 +144,4 @@ Use the included composite action in your workflows:
     output-format: markdown
 ```
 
-See [.github/workflows/gh-iac.yml](.github/workflows/gh-iac.yml) for a complete pull-request planning, merge-apply, and daily drift-monitoring workflow.
+See [examples/workflows/gh-iac.yml](examples/workflows/gh-iac.yml) for a complete pull-request planning, merge-apply, and daily drift-monitoring workflow.

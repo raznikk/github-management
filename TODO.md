@@ -109,7 +109,7 @@ This document details the functional roadmap required to bring the GitHub IaC sy
     - [x] `GOV002`: Warn if organization has two-factor authentication disabled.
     - [x] `NAM001`: Error if repository name contains invalid characters.
 - [x] **CI/CD Integration**
-  - [x] GitHub Actions workflow template for Pull Request planning and automated Merge apply ([.github/workflows/gh-iac.yml](file:///home/bbritt/Code/github-management/.github/workflows/gh-iac.yml)).
+  - [x] GitHub Actions workflow template for Pull Request planning and automated Merge apply ([examples/workflows/gh-iac.yml](file:///home/bbritt/Code/github-management/examples/workflows/gh-iac.yml)).
   - [x] PR commenting bot posting plan summaries with collapsible diffs.
   - [x] Composite GitHub Action definition in [action.yml](file:///home/bbritt/Code/github-management/action.yml).
 
