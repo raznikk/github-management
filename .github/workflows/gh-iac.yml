@@ -1,0 +1,160 @@
+name: GitHub IaC Automation
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "examples/**"
+      - "manifests/**"
+      - "src/**"
+      - ".github/workflows/gh-iac.yml"
+  push:
+    branches: [main]
+    paths:
+      - "examples/**"
+      - "manifests/**"
+  schedule:
+    # Daily drift detection audit at 06:00 UTC
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GH_IAC_ADMIN_TOKEN }}
+  GITHUB_IAC_STATE_PASSPHRASE: ${{ secrets.GH_IAC_STATE_PASSPHRASE }}
+  GITHUB_ENTERPRISE: ${{ vars.GH_ENTERPRISE_SLUG || 'octocorp' }}
+  MANIFESTS_PATH: "examples/full_stack.yaml"
+
+jobs:
+  lint-and-validate:
+    name: Lint & Pre-flight Validation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate Manifest Schema
+        run: uv run gh-iac validate ${{ env.MANIFESTS_PATH }}
+
+      - name: Run Security & Governance Linter
+        run: uv run gh-iac lint ${{ env.MANIFESTS_PATH }} --strict
+
+  plan:
+    name: Plan (Pull Request)
+    needs: [lint-and-validate]
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Generate Execution Plan
+        id: plan
+        run: |
+          uv run gh-iac plan ${{ env.MANIFESTS_PATH }} \
+            --target ghec \
+            --markdown > plan_summary.md
+
+      - name: Comment Plan on Pull Request
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const planBody = fs.readFileSync('plan_summary.md', 'utf8');
+            const header = '## 🚀 GitHub IaC Deployment Plan';
+            const body = `${header}\n\n${planBody}\n\n*Triggered by commit: ${context.sha}*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const botComment = comments.find(comment => comment.body.includes(header));
+            if (botComment) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: botComment.id,
+                body: body
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: body
+              });
+            }
+
+  apply:
+    name: Apply (Merge to Main)
+    needs: [lint-and-validate]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Apply Configuration
+        run: |
+          uv run gh-iac apply ${{ env.MANIFESTS_PATH }} \
+            --target ghec \
+            --auto-approve
+
+  drift-detection:
+    name: Scheduled Drift Audit
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check for Configuration Drift
+        run: |
+          uv run gh-iac drift ${{ env.MANIFESTS_PATH }} --target ghec

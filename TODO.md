@@ -73,48 +73,58 @@ This document details the functional roadmap required to bring the GitHub IaC sy
 
 ## Phase 3: Core IaC Engine & State Management
 
-- [ ] **Robust Diff Engine**
-  - [ ] Deep structural diffing ignoring server-assigned default values and ordering differences (e.g. lists of permissions).
-  - [ ] Sensitive field masking in plans and output (e.g. webhook secrets, encrypted Actions secrets).
-- [ ] **State Backends**
-  - [ ] Remote state backend with state locking:
-    - [ ] Amazon S3 + DynamoDB locking.
-    - [ ] Google Cloud Storage (GCS) + locking.
-    - [ ] Azure Blob Storage.
-    - [ ] Local filesystem backend (existing baseline).
-  - [ ] Encryption at rest for state files (AES-GCM via KMS or passphrase).
-- [ ] **Dependency Graph & Concurrency**
-  - [ ] Directed Acyclic Graph (DAG) using NetworkX or custom graph for parallel resolution of independent resources.
-  - [ ] Cyclic dependency detection and topological batch execution.
-  - [ ] Configurable worker threads/async tasks for high-speed synchronization across large enterprises (1,000+ repos).
-- [ ] **Resource Drift Detection & Import**
-  - [ ] `gh-iac drift`: Detect differences between state and actual GitHub reality.
-  - [ ] `gh-iac import <kind> <remote-id>`: Import pre-existing GitHub resources into declarative manifests without downtime.
+- [x] **Robust Diff Engine**
+  - [x] Deep structural diffing ignoring server-assigned default values and ordering differences (e.g. lists of permissions).
+  - [x] Sensitive field masking in plans and output (e.g. webhook secrets, encrypted Actions secrets).
+- [x] **State Backends**
+  - [x] Remote state backend with state locking:
+    - [x] Amazon S3 + object locking / DynamoDB locking (`S3StateBackend`).
+    - [x] Google Cloud Storage (GCS) + locking (`GCSStateBackend`).
+    - [x] Azure Blob Storage + lease/lockfile locking (`AzureBlobStateBackend`).
+    - [x] HTTP REST state backend (`HttpRemoteBackend`).
+    - [x] Local filesystem backend (`LocalStateBackend`).
+  - [x] Encryption at rest for state files (AES-GCM via passphrase/KMS).
+- [x] **Dependency Graph & Concurrency**
+  - [x] Directed Acyclic Graph (DAG) for parallel resolution of independent resources (`DependencyGraph`).
+  - [x] Cyclic dependency detection (`CyclicDependencyError`) and topological batch execution.
+  - [x] Configurable worker pool (`ThreadPoolExecutor(concurrency)`) for high-speed synchronization across large enterprises (1,000+ repos).
+- [x] **Resource Drift Detection & Import**
+  - [x] `gh-iac drift`: Detect differences between state and actual GitHub reality.
+  - [x] `gh-iac import <kind> <remote-id>`: Import pre-existing GitHub resources into declarative manifests without downtime.
 
 ---
 
 ## Phase 4: CLI & Developer Experience
 
-- [ ] **Interactive TUI / Rich Enhancements**
-  - [ ] Detailed colorized diff output (similar to Terraform green `+` / red `-` / yellow `~`).
-  - [ ] Non-interactive JSON output format (`gh-iac plan --json`) for CI/CD pipelines.
-- [ ] **Validation & Linting**
-  - [ ] Schema validation against GitHub API constraints before sending network requests.
-  - [ ] Linter rules (e.g. warn if main branch is not protected, warn if GHAS is disabled for public repositories).
-- [ ] **CI/CD Integration**
-  - [ ] GitHub Actions workflow template for Pull Request planning and automated Merge apply (`gh-iac-action`).
-  - [ ] PR commenting bot posting plan summaries.
+- [x] **Interactive TUI / Rich Enhancements**
+  - [x] Detailed colorized diff output (Terraform-style green `+` / red `-` / yellow `~` via `format_plan_human`).
+  - [x] Non-interactive JSON output format (`gh-iac plan --json`) for CI/CD pipelines.
+  - [x] PR Markdown output format (`gh-iac plan --markdown`) for automated PR comment bots.
+- [x] **Validation & Linting**
+  - [x] Schema validation against GitHub API constraints before sending network requests (`NAM001`, repo name constraints).
+  - [x] Linter rules (`gh-iac lint [--strict]`):
+    - [x] `SEC001`: Warn if GHAS is disabled on public repositories.
+    - [x] `SEC002`: Warn if secret scanning push protection is disabled.
+    - [x] `GOV001`: Warn if repository has no matching branch protection ruleset.
+    - [x] `GOV002`: Warn if organization has two-factor authentication disabled.
+    - [x] `NAM001`: Error if repository name contains invalid characters.
+- [x] **CI/CD Integration**
+  - [x] GitHub Actions workflow template for Pull Request planning and automated Merge apply ([.github/workflows/gh-iac.yml](file:///home/bbritt/Code/github-management/.github/workflows/gh-iac.yml)).
+  - [x] PR commenting bot posting plan summaries with collapsible diffs.
+  - [x] Composite GitHub Action definition in [action.yml](file:///home/bbritt/Code/github-management/action.yml).
 
 ---
 
 ## Phase 5: Testing, Documentation & Packaging
 
-- [ ] **Automated Testing Suite**
-  - [ ] Unit tests for all individual construct providers.
-  - [ ] End-to-end integration tests using GitHub test organizations or mock GitHub enterprise servers (`wiremock` / `respx`).
-- [ ] **Documentation**
-  - [ ] Manifest reference documentation for all construct kinds and supported specs.
-  - [ ] EMU identity synchronization guide and best practices.
-  - [ ] GHES compatibility matrix.
-- [ ] **Distribution**
-  - [ ] Standalone compiled binaries via `uv run pyinstaller` or Docker container image for runner environments.
+- [x] **Automated Testing Suite**
+  - [x] Unit tests for all individual construct providers (enterprise, governance, secrets, apps, state, dag, linter, formatters).
+  - [x] End-to-end integration tests using full-stack 17-manifest lifecycle ([tests/test_e2e_full_stack.py](file:///home/bbritt/Code/github-management/tests/test_e2e_full_stack.py)).
+- [x] **Documentation**
+  - [x] Manifest reference documentation for all 17 construct kinds ([docs/MANIFEST_REFERENCE.md](file:///home/bbritt/Code/github-management/docs/MANIFEST_REFERENCE.md)).
+  - [x] EMU identity synchronization guide and best practices ([docs/EMU_GUIDE.md](file:///home/bbritt/Code/github-management/docs/EMU_GUIDE.md)).
+  - [x] GHES compatibility matrix across versions 3.10–3.14+, air-gapped CA and proxy setup ([docs/GHES_COMPATIBILITY.md](file:///home/bbritt/Code/github-management/docs/GHES_COMPATIBILITY.md)).
+  - [x] GitHub Apps creation, installation, and ruleset bypass guide ([docs/GITHUB_APPS.md](file:///home/bbritt/Code/github-management/docs/GITHUB_APPS.md)).
+- [x] **Distribution**
+  - [x] Production multi-stage Docker container image ([Dockerfile](file:///home/bbritt/Code/github-management/Dockerfile) & [.dockerignore](file:///home/bbritt/Code/github-management/.dockerignore)).
+  - [x] GitHub Actions Composite Action definition ([action.yml](file:///home/bbritt/Code/github-management/action.yml)).
