@@ -117,7 +117,9 @@ class RepositoryProvider(BaseProvider):
                       }
                     }
                     """
-                    vis = "PRIVATE" if desired.get("visibility", "private") == "private" else "PUBLIC"
+                    vis = (
+                        "PRIVATE" if desired.get("visibility", "private") == "private" else "PUBLIC"
+                    )
                     res = self.client.graphql(
                         create_mutation,
                         {
@@ -192,14 +194,18 @@ class RepositoryRulesetProvider(BaseProvider):
         ruleset_name = manifest.spec.get("name", manifest.metadata.name)
 
         if not org or not repo:
-            raise ValueError("RepositoryRuleset requires metadata.organization and metadata.repository.")
+            raise ValueError(
+                "RepositoryRuleset requires metadata.organization and metadata.repository."
+            )
 
         try:
             rulesets = self.client.rest("GET", f"/repos/{org}/{repo}/rulesets")
             if isinstance(rulesets, list):
                 for rs in rulesets:
                     if rs.get("name") == ruleset_name:
-                        detail = self.client.rest("GET", f"/repos/{org}/{repo}/rulesets/{rs.get('id')}")
+                        detail = self.client.rest(
+                            "GET", f"/repos/{org}/{repo}/rulesets/{rs.get('id')}"
+                        )
                         return ResourceState(
                             resource_id=manifest.resource_id,
                             kind=manifest.kind,
@@ -255,7 +261,9 @@ class RepositoryRulesetProvider(BaseProvider):
                 ruleset_id = curr.numeric_id if curr else None
 
             if ruleset_id:
-                res = self.client.rest("PUT", f"/repos/{org}/{repo}/rulesets/{ruleset_id}", json_data=desired)
+                res = self.client.rest(
+                    "PUT", f"/repos/{org}/{repo}/rulesets/{ruleset_id}", json_data=desired
+                )
                 numeric_id = ruleset_id
 
         return ResourceState(
@@ -341,7 +349,9 @@ class RepositorySecretProvider(BaseProvider):
             "encrypted_value": encrypted_val,
             "key_id": key_id,
         }
-        self.client.rest("PUT", f"/repos/{org}/{repo}/actions/secrets/{secret_name}", json_data=payload)
+        self.client.rest(
+            "PUT", f"/repos/{org}/{repo}/actions/secrets/{secret_name}", json_data=payload
+        )
 
         return ResourceState(
             resource_id=manifest.resource_id,
@@ -354,3 +364,113 @@ class RepositorySecretProvider(BaseProvider):
             last_updated=datetime.now(timezone.utc).isoformat(),
         )
 
+
+class RepositoryPagesProvider(BaseProvider):
+    """
+    Manages GitHub Pages configuration for repositories.
+    Supports legacy branch deployment, GitHub Actions workflow deployment,
+    custom domains (cname), HTTPS enforcement, and private Pages visibility.
+    REST: /repos/{owner}/{repo}/pages
+    """
+
+    def read(self, manifest: GitHubManifest) -> Optional[ResourceState]:
+        org = manifest.metadata.organization
+        repo = manifest.metadata.repository or manifest.metadata.name
+
+        if not org or not repo:
+            raise ValueError(
+                "RepositoryPages requires metadata.organization and metadata.repository."
+            )
+
+        try:
+            pages = self.client.rest("GET", f"/repos/{org}/{repo}/pages")
+            if not isinstance(pages, dict):
+                return None
+            return ResourceState(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                url=pages.get("html_url"),
+                attributes={
+                    "status": pages.get("status"),
+                    "cname": pages.get("cname"),
+                    "custom_404": pages.get("custom_404"),
+                    "html_url": pages.get("html_url"),
+                    "build_type": pages.get("build_type"),
+                    "source": pages.get("source"),
+                    "public": pages.get("public"),
+                    "https_enforced": pages.get("https_enforced"),
+                },
+                applied_spec=manifest.spec,
+                last_updated=datetime.now(timezone.utc).isoformat(),
+            )
+        except Exception:
+            return None
+
+    def plan(self, manifest: GitHubManifest, current: Optional[ResourceState]) -> ResourcePlan:
+        desired = manifest.spec
+        if not current:
+            return ResourcePlan(
+                resource_id=manifest.resource_id,
+                kind=manifest.kind,
+                action=ActionType.CREATE,
+                diff={"desired": desired},
+                current_state=None,
+                desired_state=desired,
+            )
+
+        diff: Dict[str, Any] = {}
+        for k in ["build_type", "source", "cname", "https_enforced", "public"]:
+            if k in desired and current.attributes.get(k) != desired[k]:
+                diff[k] = {"old": current.attributes.get(k), "new": desired[k]}
+
+        action = ActionType.UPDATE if diff else ActionType.NOOP
+        return ResourcePlan(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            action=action,
+            diff=diff,
+            current_state=current.attributes,
+            desired_state=desired,
+        )
+
+    def apply(self, plan: ResourcePlan, manifest: GitHubManifest) -> ResourceState:
+        org = manifest.metadata.organization
+        repo = manifest.metadata.repository or manifest.metadata.name
+        desired = manifest.spec
+
+        html_url = None
+        if plan.action == ActionType.CREATE:
+            payload = {}
+            if "build_type" in desired:
+                payload["build_type"] = desired["build_type"]
+            if "source" in desired:
+                payload["source"] = desired["source"]
+            res = self.client.rest("POST", f"/repos/{org}/{repo}/pages", json_data=payload)
+            html_url = res.get("html_url") if isinstance(res, dict) else None
+
+            update_payload = {}
+            for k in ["cname", "https_enforced", "public"]:
+                if k in desired:
+                    update_payload[k] = desired[k]
+            if update_payload:
+                try:
+                    self.client.rest("PUT", f"/repos/{org}/{repo}/pages", json_data=update_payload)
+                except Exception:
+                    pass
+
+        elif plan.action == ActionType.UPDATE:
+            payload = {}
+            for k in ["build_type", "source", "cname", "https_enforced", "public"]:
+                if k in desired:
+                    payload[k] = desired[k]
+            res = self.client.rest("PUT", f"/repos/{org}/{repo}/pages", json_data=payload)
+            html_url = res.get("html_url") if isinstance(res, dict) else None
+
+        return ResourceState(
+            resource_id=manifest.resource_id,
+            kind=manifest.kind,
+            url=html_url,
+            attributes=desired,
+            applied_spec=desired,
+            last_updated=datetime.now(timezone.utc).isoformat(),
+        )

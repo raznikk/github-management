@@ -72,9 +72,9 @@ def test_format_plan_human():
     format_plan_human(plans, console)
     output = string_io.getvalue()
 
-    assert 'will be created' in output
+    assert "will be created" in output
     assert '+ resource "Repository"' in output
-    assert 'will be updated in-place' in output
+    assert "will be updated in-place" in output
     assert '~ resource "EnterpriseSecuritySetting"' in output
     assert "push_protection = False -> True" in output
     assert "Plan: 1 to add, 1 to change, 0 to destroy" in output

@@ -6,7 +6,7 @@ A declarative Infrastructure-as-Code (IaC) management system for GitHub, support
 
 ## Documentation Index
 
-- 📖 [**Manifest Reference Guide**](docs/MANIFEST_REFERENCE.md): Detailed specifications for all 22 supported construct Kinds and spec schemas.
+- 📖 [**Manifest Reference Guide**](docs/MANIFEST_REFERENCE.md): Detailed specifications for all 24 supported construct Kinds and spec schemas.
 - 🔗 [**REST & GraphQL API Correlation**](docs/API_CORRELATION.md): Complete field-by-field mapping between declarative manifests and GitHub REST, GraphQL, and SCIM APIs.
 - 🤖 [**GitHub Apps Management**](docs/GITHUB_APPS.md): Declarative provisioning of Enterprise- and Org-scoped GitHub Apps with automated RSA key generation and ruleset bypass.
 - 👥 [**EMU Identity Synchronization Guide**](docs/EMU_GUIDE.md): Architecture, Okta/Entra ID SCIM 2.0 provisioning, and IdP-to-Team mapping best practices.
@@ -79,6 +79,21 @@ Or standard `pip`:
 
 ```bash
 pip install -e .
+```
+
+### Development Task Automation (`just`)
+
+This repository includes a [`Justfile`](Justfile) automating test, lint, format, coverage, and manifest workflows:
+
+```bash
+just                  # List all available recipes
+just check            # Run Ruff linting and format checks
+just format           # Format codebase with Ruff
+just test             # Run all pytest suites
+just cov-report       # Run line-by-line missing coverage report
+just validate-all     # Validate both single-file and multi-org examples
+just plan             # Run dry-run plan on examples/multi_org/
+just apply            # Apply configuration to target
 ```
 
 ---

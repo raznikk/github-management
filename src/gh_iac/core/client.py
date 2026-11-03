@@ -16,6 +16,7 @@ logger = logging.getLogger("gh_iac.client")
 @dataclass
 class RateLimitInfo:
     """GitHub API Rate Limit telemetry."""
+
     limit: int
     remaining: int
     reset_epoch: int
@@ -25,7 +26,10 @@ class RateLimitInfo:
 
 class GitHubAPIError(Exception):
     """Exception raised when a GitHub GraphQL or REST request fails."""
-    def __init__(self, message: str, status_code: Optional[int] = None, errors: Optional[Any] = None):
+
+    def __init__(
+        self, message: str, status_code: Optional[int] = None, errors: Optional[Any] = None
+    ):
         super().__init__(message)
         self.status_code = status_code
         self.errors = errors
@@ -58,6 +62,7 @@ class GitHubClient:
         verify_setting: Any = config.verify_ssl
         if config.ca_bundle:
             import ssl
+
             verify_setting = ssl.create_default_context(cafile=config.ca_bundle)
 
         self.http_client = httpx.Client(
@@ -86,7 +91,9 @@ class GitHubClient:
                     limit=int(limit_str),
                     remaining=int(remaining_str),
                     reset_epoch=int(reset_str),
-                    used=int(headers["x-ratelimit-used"]) if "x-ratelimit-used" in headers else None,
+                    used=int(headers["x-ratelimit-used"])
+                    if "x-ratelimit-used" in headers
+                    else None,
                     resource=headers.get("x-ratelimit-resource"),
                 )
             except ValueError:
@@ -125,9 +132,9 @@ class GitHubClient:
                     try:
                         sleep_time = float(retry_after_str)
                     except ValueError:
-                        sleep_time = self.base_backoff_seconds * (2 ** attempt)
+                        sleep_time = self.base_backoff_seconds * (2**attempt)
                 else:
-                    sleep_time = self.base_backoff_seconds * (2 ** attempt) + random.uniform(0, 0.05)
+                    sleep_time = self.base_backoff_seconds * (2**attempt) + random.uniform(0, 0.05)
 
                 logger.warning(
                     "Rate limit hit (%d) on %s %s. Sleeping %.2fs (attempt %d/%d)",
@@ -258,4 +265,3 @@ class GitHubClient:
             custom_base_url=scim_base,
             extra_headers=headers,
         )
-

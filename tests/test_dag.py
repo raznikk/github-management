@@ -24,7 +24,9 @@ def test_dag_hierarchical_tiering():
     )
     m_ruleset = GitHubManifest(
         kind="RepositoryRuleset",
-        metadata=ManifestMetadata(name="main-rules", organization="cloud-org", repository="app-repo"),
+        metadata=ManifestMetadata(
+            name="main-rules", organization="cloud-org", repository="app-repo"
+        ),
         spec={},
     )
 

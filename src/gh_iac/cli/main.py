@@ -46,7 +46,9 @@ def get_client(
 ) -> GitHubClient:
     auth_token = token or os.environ.get("GITHUB_TOKEN", "")
     if not auth_token:
-        console.print("[red]Error: GITHUB_TOKEN environment variable or --token option is required.[/red]")
+        console.print(
+            "[red]Error: GITHUB_TOKEN environment variable or --token option is required.[/red]"
+        )
         raise typer.Exit(code=1)
 
     ent_slug = enterprise or os.environ.get("GITHUB_ENTERPRISE")
@@ -63,9 +65,13 @@ def get_client(
         if not host:
             console.print("[red]Error: --hostname is required for GHES target.[/red]")
             raise typer.Exit(code=1)
-        config = TargetConfig.create_for_ghes(hostname=host, token=auth_token, enterprise_slug=ent_slug)
+        config = TargetConfig.create_for_ghes(
+            hostname=host, token=auth_token, enterprise_slug=ent_slug
+        )
     else:
-        console.print(f"[red]Error: Unsupported target environment '{target}'. Choose ghec, ghes, or emu.[/red]")
+        console.print(
+            f"[red]Error: Unsupported target environment '{target}'. Choose ghec, ghes, or emu.[/red]"
+        )
         raise typer.Exit(code=1)
 
     return GitHubClient(config)
@@ -82,7 +88,9 @@ def validate(
 
     try:
         manifests = Engine.load_manifests(path)
-        console.print(f"[green]✓ Successfully parsed and validated schema of {len(manifests)} manifests![/green]")
+        console.print(
+            f"[green]✓ Successfully parsed and validated schema of {len(manifests)} manifests![/green]"
+        )
         table = Table(title="Validated GitHub Constructs")
         table.add_column("Kind", style="cyan")
         table.add_column("Resource ID", style="magenta")
@@ -96,7 +104,9 @@ def validate(
         errors = [d for d in diagnostics if d.level == LintLevel.ERROR]
         warnings = [d for d in diagnostics if d.level == LintLevel.WARNING]
         if warnings:
-            console.print(f"[yellow]Found {len(warnings)} security/governance lint warning(s). Run 'gh-iac lint' for full audit.[/yellow]")
+            console.print(
+                f"[yellow]Found {len(warnings)} security/governance lint warning(s). Run 'gh-iac lint' for full audit.[/yellow]"
+            )
         if errors:
             console.print(f"[bold red]Found {len(errors)} syntax/naming error(s)![/bold red]")
             for err in errors:
@@ -110,7 +120,9 @@ def validate(
 @app.command()
 def lint(
     path: Path = typer.Argument(..., help="Path to manifest file or directory"),
-    strict: bool = typer.Option(False, "--strict", help="Fail with exit code 1 on warnings as well as errors"),
+    strict: bool = typer.Option(
+        False, "--strict", help="Fail with exit code 1 on warnings as well as errors"
+    ),
 ) -> None:
     """Run pre-flight security, governance, and naming linter on manifests."""
     if not path.exists():
@@ -122,7 +134,9 @@ def lint(
     diagnostics = linter.lint(manifests)
 
     if not diagnostics:
-        console.print("[bold green]✓ All manifests passed linting checks with 0 issues![/bold green]")
+        console.print(
+            "[bold green]✓ All manifests passed linting checks with 0 issues![/bold green]"
+        )
         return
 
     table = Table(title="GitHub IaC Lint Diagnostics")
@@ -147,7 +161,9 @@ def lint(
         table.add_row(lvl_str, d.rule_id, d.resource_id, d.message)
 
     console.print(table)
-    console.print(f"\nAudit complete: [red]{errors} error(s)[/red], [yellow]{warnings} warning(s)[/yellow].")
+    console.print(
+        f"\nAudit complete: [red]{errors} error(s)[/red], [yellow]{warnings} warning(s)[/yellow]."
+    )
 
     if errors > 0 or (strict and warnings > 0):
         raise typer.Exit(code=1)
@@ -160,11 +176,21 @@ def plan(
     token: Optional[str] = typer.Option(None, "--token", help="GitHub Token"),
     enterprise: Optional[str] = typer.Option(None, "--enterprise", "-e", help="Enterprise slug"),
     hostname: Optional[str] = typer.Option(None, "--hostname", help="GHES hostname"),
-    state_file: Optional[Path] = typer.Option(None, "--state-file", help="Path to local state file"),
-    state_passphrase: Optional[str] = typer.Option(None, "--state-passphrase", help="Passphrase for state encryption"),
-    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Number of concurrent DAG workers"),
-    json_output: bool = typer.Option(False, "--json", help="Output execution plan as JSON for CI/CD pipelines"),
-    markdown_output: bool = typer.Option(False, "--markdown", help="Output execution plan as GitHub Markdown for PR comments"),
+    state_file: Optional[Path] = typer.Option(
+        None, "--state-file", help="Path to local state file"
+    ),
+    state_passphrase: Optional[str] = typer.Option(
+        None, "--state-passphrase", help="Passphrase for state encryption"
+    ),
+    concurrency: int = typer.Option(
+        5, "--concurrency", "-c", help="Number of concurrent DAG workers"
+    ),
+    json_output: bool = typer.Option(
+        False, "--json", help="Output execution plan as JSON for CI/CD pipelines"
+    ),
+    markdown_output: bool = typer.Option(
+        False, "--markdown", help="Output execution plan as GitHub Markdown for PR comments"
+    ),
 ) -> None:
     """Preview actions (Create, Update, NoOp) against GitHub."""
     client = get_client(target, token, enterprise, hostname)
@@ -191,10 +217,18 @@ def apply(
     token: Optional[str] = typer.Option(None, "--token", help="GitHub Token"),
     enterprise: Optional[str] = typer.Option(None, "--enterprise", "-e", help="Enterprise slug"),
     hostname: Optional[str] = typer.Option(None, "--hostname", help="GHES hostname"),
-    state_file: Optional[Path] = typer.Option(None, "--state-file", help="Path to local state file"),
-    state_passphrase: Optional[str] = typer.Option(None, "--state-passphrase", help="Passphrase for state encryption"),
-    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Number of concurrent DAG workers"),
-    auto_approve: bool = typer.Option(False, "--auto-approve", "-y", help="Skip interactive approval"),
+    state_file: Optional[Path] = typer.Option(
+        None, "--state-file", help="Path to local state file"
+    ),
+    state_passphrase: Optional[str] = typer.Option(
+        None, "--state-passphrase", help="Passphrase for state encryption"
+    ),
+    concurrency: int = typer.Option(
+        5, "--concurrency", "-c", help="Number of concurrent DAG workers"
+    ),
+    auto_approve: bool = typer.Option(
+        False, "--auto-approve", "-y", help="Skip interactive approval"
+    ),
 ) -> None:
     """Apply declarative configuration to GitHub."""
     client = get_client(target, token, enterprise, hostname)
@@ -208,7 +242,9 @@ def apply(
         console.print("[green]No changes needed. Infrastructure is up to date.[/green]")
         return
 
-    console.print(f"Plan: {len([p for p in plans if p.action == ActionType.CREATE])} to create, {len([p for p in plans if p.action == ActionType.UPDATE])} to update.")
+    console.print(
+        f"Plan: {len([p for p in plans if p.action == ActionType.CREATE])} to create, {len([p for p in plans if p.action == ActionType.UPDATE])} to update."
+    )
     if not auto_approve:
         confirmed = typer.confirm("Do you want to apply these changes?")
         if not confirmed:
@@ -226,9 +262,15 @@ def drift(
     token: Optional[str] = typer.Option(None, "--token", help="GitHub Token"),
     enterprise: Optional[str] = typer.Option(None, "--enterprise", "-e", help="Enterprise slug"),
     hostname: Optional[str] = typer.Option(None, "--hostname", help="GHES hostname"),
-    state_file: Optional[Path] = typer.Option(None, "--state-file", help="Path to local state file"),
-    state_passphrase: Optional[str] = typer.Option(None, "--state-passphrase", help="Passphrase for state encryption"),
-    concurrency: int = typer.Option(5, "--concurrency", "-c", help="Number of concurrent DAG workers"),
+    state_file: Optional[Path] = typer.Option(
+        None, "--state-file", help="Path to local state file"
+    ),
+    state_passphrase: Optional[str] = typer.Option(
+        None, "--state-passphrase", help="Passphrase for state encryption"
+    ),
+    concurrency: int = typer.Option(
+        5, "--concurrency", "-c", help="Number of concurrent DAG workers"
+    ),
 ) -> None:
     """Detect configuration drift between declared manifests and live GitHub environment."""
     from gh_iac.core.diff import compute_diff
@@ -249,21 +291,31 @@ def drift(
         provider = engine.get_provider(m.kind)
         current = provider.read(m)
         if not current:
-            table.add_row(m.kind, m.resource_id, "[red]MISSING[/red]", "Resource does not exist on remote")
+            table.add_row(
+                m.kind, m.resource_id, "[red]MISSING[/red]", "Resource does not exist on remote"
+            )
             drift_detected = True
             continue
 
-        diff = compute_diff(current.attributes, m.spec, ignore_empty_defaults=True, ignore_masked_secrets=True)
+        diff = compute_diff(
+            current.attributes, m.spec, ignore_empty_defaults=True, ignore_masked_secrets=True
+        )
         if not diff.is_empty:
-            drift_details = ", ".join([f"{k}: '{v['old']}' -> '{v['new']}'" for k, v in diff.changes.items()])
-            table.add_row(m.kind, m.resource_id, "[bold red]DRIFT DETECTED[/bold red]", drift_details)
+            drift_details = ", ".join(
+                [f"{k}: '{v['old']}' -> '{v['new']}'" for k, v in diff.changes.items()]
+            )
+            table.add_row(
+                m.kind, m.resource_id, "[bold red]DRIFT DETECTED[/bold red]", drift_details
+            )
             drift_detected = True
         else:
             table.add_row(m.kind, m.resource_id, "[green]IN SYNC[/green]", "Matches desired state")
 
     console.print(table)
     if drift_detected:
-        console.print("[bold red]⚠ Drift detected between desired state and remote GitHub environment.[/bold red]")
+        console.print(
+            "[bold red]⚠ Drift detected between desired state and remote GitHub environment.[/bold red]"
+        )
         raise typer.Exit(code=2)
     else:
         console.print("[bold green]✓ All resources are in sync with desired state.[/bold green]")
@@ -272,12 +324,16 @@ def drift(
 @app.command(name="import")
 def import_resource(
     kind: str = typer.Argument(..., help="Construct Kind (e.g. Repository, Organization, Team)"),
-    identifier: str = typer.Argument(..., help="Identifier (e.g. 'octocorp/core-infra' or 'octocorp')"),
+    identifier: str = typer.Argument(
+        ..., help="Identifier (e.g. 'octocorp/core-infra' or 'octocorp')"
+    ),
     target: str = typer.Option("ghec", "--target", "-t", help="Target: ghec, ghes, or emu"),
     token: Optional[str] = typer.Option(None, "--token", help="GitHub Token"),
     enterprise: Optional[str] = typer.Option(None, "--enterprise", "-e", help="Enterprise slug"),
     hostname: Optional[str] = typer.Option(None, "--hostname", help="GHES hostname"),
-    output_file: Optional[Path] = typer.Option(None, "--output", "-o", help="File to write generated YAML manifest to"),
+    output_file: Optional[Path] = typer.Option(
+        None, "--output", "-o", help="File to write generated YAML manifest to"
+    ),
 ) -> None:
     """Import pre-existing GitHub resources into declarative YAML manifests."""
     import yaml
@@ -309,11 +365,17 @@ def import_resource(
     current = provider.read(dummy_manifest)
 
     if not current:
-        console.print(f"[red]Error: Resource '{identifier}' of kind '{kind}' was not found on remote GitHub target.[/red]")
+        console.print(
+            f"[red]Error: Resource '{identifier}' of kind '{kind}' was not found on remote GitHub target.[/red]"
+        )
         raise typer.Exit(code=1)
 
     # Filter out read-only identifiers from spec
-    filtered_spec = {k: v for k, v in current.attributes.items() if k not in ("id", "node_id", "numeric_id", "url") and v is not None}
+    filtered_spec = {
+        k: v
+        for k, v in current.attributes.items()
+        if k not in ("id", "node_id", "numeric_id", "url") and v is not None
+    }
 
     manifest_obj = {
         "apiVersion": "github.iac/v1alpha1",
@@ -336,4 +398,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

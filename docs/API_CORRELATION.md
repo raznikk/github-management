@@ -375,3 +375,47 @@ This document provides an exhaustive, field-by-field correlation between the dec
 
 - **Official GitHub Docs:** [Enterprise Repository Rulesets](https://docs.github.com/en/enterprise-cloud@latest/rest/enterprise-admin/rules#create-an-enterprise-ruleset)
 
+---
+
+### 23. `EnterpriseSecurityConfiguration`
+- **Example Manifest:** [examples/multi_org/enterprise/enterprise.yaml](file:///home/bbritt/Code/github-management/examples/multi_org/enterprise/enterprise.yaml)
+- **Scope:** Enterprise (`metadata.enterprise`)
+
+| Manifest Spec Field | Type | GitHub API Target | Method | Path / Operation | Payload Mapping |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| *(Read Operation)* | - | REST v3 | `GET` | `/enterprises/{enterprise}/code-security/configurations` | Query existing code security configurations |
+| `name` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"name": "strict-tier1-ghas-profile"}` |
+| `description` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"description": "Strict GHAS enforcement..."}` |
+| `advanced_security` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"advanced_security": "enabled"}` |
+| `secret_scanning` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"secret_scanning": "enabled"}` |
+| `secret_scanning_push_protection` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"secret_scanning_push_protection": "enabled"}` |
+| `secret_scanning_validity_checks` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"secret_scanning_validity_checks": "enabled"}` |
+| `code_scanning_default_setup` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"code_scanning_default_setup": "enabled"}` |
+| `dependabot_alerts` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"dependabot_alerts": "enabled"}` |
+| `dependabot_security_updates` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"dependabot_security_updates": "enabled"}` |
+| `private_vulnerability_reporting` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"private_vulnerability_reporting": "enabled"}` |
+| `enforcement` | `str` | REST v3 | `POST`/`PATCH` | `/enterprises/{enterprise}/code-security/configurations` | `{"enforcement": "enforced"}` |
+| `default_for_new_repos` | `str` | REST v3 | `PUT` | `/enterprises/{enterprise}/code-security/configurations/{id}/defaults` | `{"default_for_new_repos": "all"}` |
+| `repositories` | `list[int]` | REST v3 | `POST` | `/enterprises/{enterprise}/code-security/configurations/{id}/repositories` | `{"selected_repository_ids": [554433]}` |
+
+- **Official GitHub Docs:** [Enterprise Code Security Configurations](https://docs.github.com/en/enterprise-cloud@latest/rest/enterprise-admin/code-security-and-analysis#create-a-custom-code-security-configuration)
+
+---
+
+### 24. `RepositoryPages`
+- **Example Manifest:** [examples/multi_org/org_platform/repositories.yaml](file:///home/bbritt/Code/github-management/examples/multi_org/org_platform/repositories.yaml)
+- **Scope:** Repository (`metadata.organization`, `metadata.repository`)
+
+| Manifest Spec Field | Type | GitHub API Target | Method | Path / Operation | Payload Mapping |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| *(Read Operation)* | - | REST v3 | `GET` | `/repos/{owner}/{repo}/pages` | Get GitHub Pages site status and configuration |
+| `build_type` | `str` | REST v3 | `POST`/`PUT` | `/repos/{owner}/{repo}/pages` | `{"build_type": "workflow"}` |
+| `source` | `dict` | REST v3 | `POST`/`PUT` | `/repos/{owner}/{repo}/pages` | `{"source": {"branch": "main", "path": "/docs"}}` |
+| `cname` | `str` | REST v3 | `PUT` | `/repos/{owner}/{repo}/pages` | `{"cname": "docs.octocorp.internal"}` |
+| `https_enforced` | `bool` | REST v3 | `PUT` | `/repos/{owner}/{repo}/pages` | `{"https_enforced": true}` |
+| `public` | `bool` | REST v3 | `PUT` | `/repos/{owner}/{repo}/pages` | `{"public": false}` |
+
+- **Official GitHub Docs:** [GitHub Pages REST API](https://docs.github.com/en/enterprise-cloud@latest/rest/pages)
+
+
+

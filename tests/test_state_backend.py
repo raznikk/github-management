@@ -176,7 +176,9 @@ def test_gcs_and_azure_backends():
     assert gcs.read_state().environment == "default"
 
     # Azure Blob
-    az = AzureBlobStateBackend(storage_account="mystorage", container_name="iac-states", blob_name="prod.state")
+    az = AzureBlobStateBackend(
+        storage_account="mystorage", container_name="iac-states", blob_name="prod.state"
+    )
     respx.get("https://mystorage.blob.core.windows.net/iac-states/prod.state").mock(
         return_value=respx.MockResponse(404)
     )
@@ -201,8 +203,7 @@ def test_state_manager_factory():
     http_b = create_state_backend("http", address="https://example.com/state")
     assert isinstance(http_b, HttpRemoteBackend)
 
-    mgr = StateManager.from_config({
-        "type": "local",
-        "options": {"state_path": "/tmp/cfg_state.json"}
-    })
+    mgr = StateManager.from_config(
+        {"type": "local", "options": {"state_path": "/tmp/cfg_state.json"}}
+    )
     assert isinstance(mgr.backend, LocalStateBackend)

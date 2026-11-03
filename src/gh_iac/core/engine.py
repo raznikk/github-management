@@ -23,6 +23,7 @@ from gh_iac.providers.enterprise import (
 )
 from gh_iac.providers.governance import (
     CustomRepositoryRoleProvider,
+    EnterpriseSecurityConfigurationProvider,
     EnterpriseSecuritySettingProvider,
 )
 from gh_iac.providers.organization import (
@@ -35,6 +36,7 @@ from gh_iac.providers.organization import (
     TeamProvider,
 )
 from gh_iac.providers.repository import (
+    RepositoryPagesProvider,
     RepositoryProvider,
     RepositoryRulesetProvider,
     RepositorySecretProvider,
@@ -55,6 +57,7 @@ KIND_PRIORITY = {
     "GitHubApp": 28,
     # 2. Governance constructs
     "EnterpriseSecuritySetting": 30,
+    "EnterpriseSecurityConfiguration": 32,
     "EnterpriseCustomRole": 35,
     "CustomRepositoryRole": 40,
     # 3. Organization & Team constructs
@@ -67,6 +70,7 @@ KIND_PRIORITY = {
     "Team": 60,
     # 4. Repository & Ruleset constructs
     "Repository": 70,
+    "RepositoryPages": 72,
     "RepositorySecret": 75,
     "RepositoryRuleset": 80,
 }
@@ -84,6 +88,7 @@ PROVIDER_REGISTRY: Dict[str, Type[BaseProvider]] = {
     "EMUTeamMapping": EMUTeamMappingProvider,
     "GitHubApp": GitHubAppProvider,
     "EnterpriseSecuritySetting": EnterpriseSecuritySettingProvider,
+    "EnterpriseSecurityConfiguration": EnterpriseSecurityConfigurationProvider,
     "EnterpriseCustomRole": EnterpriseCustomRoleProvider,
     "CustomRepositoryRole": CustomRepositoryRoleProvider,
     "Organization": OrganizationProvider,
@@ -94,10 +99,10 @@ PROVIDER_REGISTRY: Dict[str, Type[BaseProvider]] = {
     "OrganizationWebhook": OrganizationWebhookProvider,
     "Team": TeamProvider,
     "Repository": RepositoryProvider,
+    "RepositoryPages": RepositoryPagesProvider,
     "RepositorySecret": RepositorySecretProvider,
     "RepositoryRuleset": RepositoryRulesetProvider,
 }
-
 
 
 class Engine:
@@ -126,7 +131,9 @@ class Engine:
     def load_manifests(path: Path) -> List[GitHubManifest]:
         """Load and parse YAML manifests from file or directory recursively."""
         manifests: List[GitHubManifest] = []
-        files = [path] if path.is_file() else list(path.glob("**/*.yaml")) + list(path.glob("**/*.yml"))
+        files = (
+            [path] if path.is_file() else list(path.glob("**/*.yaml")) + list(path.glob("**/*.yml"))
+        )
 
         for file in files:
             content = file.read_text(encoding="utf-8")
@@ -175,7 +182,9 @@ class Engine:
         self.state_manager.set_resource(new_state.resource_id, new_state)
         return new_state
 
-    def apply(self, plans: List[ResourcePlan], manifests: List[GitHubManifest]) -> List[ResourceState]:
+    def apply(
+        self, plans: List[ResourcePlan], manifests: List[GitHubManifest]
+    ) -> List[ResourceState]:
         """Apply planned changes and persist state tier-by-tier."""
         plan_map = {p.resource_id: p for p in plans}
         applied_states: List[ResourceState] = []
@@ -196,4 +205,3 @@ class Engine:
                 self.state_manager.save()
 
         return applied_states
-

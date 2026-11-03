@@ -55,7 +55,9 @@ class CredentialResolver:
             var_name = reference[4:].strip()
             val = os.environ.get(var_name)
             if val is None:
-                raise ValueError(f"Environment variable '{var_name}' referenced in credential was not found.")
+                raise ValueError(
+                    f"Environment variable '{var_name}' referenced in credential was not found."
+                )
             return val
 
         # Check ${VARIABLE} syntax
@@ -64,7 +66,9 @@ class CredentialResolver:
             var_name = match.group(1)
             val = os.environ.get(var_name)
             if val is None:
-                raise ValueError(f"Environment variable '{var_name}' referenced in credential was not found.")
+                raise ValueError(
+                    f"Environment variable '{var_name}' referenced in credential was not found."
+                )
             return val
 
         # Literal value
@@ -85,4 +89,3 @@ def encrypt_github_secret(public_key_b64: str, secret_value: str) -> str:
     sealed_box = public.SealedBox(public_key)
     encrypted = sealed_box.encrypt(secret_value.encode("utf-8"))
     return base64.b64encode(encrypted).decode("utf-8")
-

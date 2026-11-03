@@ -86,15 +86,25 @@ def test_full_stack_e2e_lifecycle(tmp_path: Path, monkeypatch: pytest.MonkeyPatc
     assert b"octocorp" not in raw_disk_bytes  # Encrypted with AES-GCM!
 
     # 9. Reload state and verify all resources recorded
-    new_state_mgr = StateManager(backend=LocalStateBackend(state_path=state_file, passphrase=passphrase))
+    new_state_mgr = StateManager(
+        backend=LocalStateBackend(state_path=state_file, passphrase=passphrase)
+    )
     assert len(new_state_mgr.state.resources) == 22
     assert "Repository/org:octocorp-cloud/core-infrastructure" in new_state_mgr.state.resources
-    assert "OrganizationRuleset/org:octocorp-cloud/org-default-protection" in new_state_mgr.state.resources
-    assert "OrganizationVariable/org:octocorp-cloud/DOCKER_REGISTRY_URL" in new_state_mgr.state.resources
+    assert (
+        "OrganizationRuleset/org:octocorp-cloud/org-default-protection"
+        in new_state_mgr.state.resources
+    )
+    assert (
+        "OrganizationVariable/org:octocorp-cloud/DOCKER_REGISTRY_URL"
+        in new_state_mgr.state.resources
+    )
 
     # 10. Drift check: With remote matching state, diff is empty
     for m in manifests:
         recorded = new_state_mgr.get_resource(m.resource_id)
         assert recorded is not None
-        diff = compute_diff(recorded.attributes, m.spec, ignore_empty_defaults=True, ignore_masked_secrets=True)
+        diff = compute_diff(
+            recorded.attributes, m.spec, ignore_empty_defaults=True, ignore_masked_secrets=True
+        )
         assert diff.is_empty

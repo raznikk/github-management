@@ -14,11 +14,13 @@ from pydantic import BaseModel, Field
 
 class StateLockError(Exception):
     """Raised when an operation cannot proceed due to an existing state lock."""
+
     pass
 
 
 class ResourceState(BaseModel):
     """Recorded state for an individual GitHub resource."""
+
     resource_id: str
     kind: str
     node_id: Optional[str] = None  # GitHub GraphQL Global Node ID
@@ -31,6 +33,7 @@ class ResourceState(BaseModel):
 
 class StateFile(BaseModel):
     """Root model for serialized state files."""
+
     version: str = "1"
     environment: str
     resources: Dict[str, ResourceState] = Field(default_factory=dict)
@@ -65,7 +68,6 @@ class BaseStateBackend(ABC):
         pass
 
 
-
 def serialize_state(state: StateFile, passphrase: Optional[str] = None) -> bytes:
     """Serialize StateFile to bytes, with optional AES-GCM encryption."""
     json_bytes = state.model_dump_json(indent=2).encode("utf-8")
@@ -92,7 +94,9 @@ def deserialize_state(raw_bytes: bytes, passphrase: Optional[str] = None) -> Sta
             decrypted = aesgcm.decrypt(nonce, ciphertext, None)
             data = json.loads(decrypted.decode("utf-8"))
         except Exception as e:
-            raise ValueError(f"Failed to decrypt state file: invalid passphrase or corrupted data ({e})") from e
+            raise ValueError(
+                f"Failed to decrypt state file: invalid passphrase or corrupted data ({e})"
+            ) from e
     else:
         data = json.loads(raw_bytes.decode("utf-8"))
 
@@ -333,7 +337,9 @@ class AzureBlobStateBackend(BaseStateBackend):
 
     def write_state(self, state: StateFile) -> None:
         content = serialize_state(state, self.passphrase)
-        resp = self._client.put(self.base_url, content=content, headers={"x-ms-blob-type": "BlockBlob"})
+        resp = self._client.put(
+            self.base_url, content=content, headers={"x-ms-blob-type": "BlockBlob"}
+        )
         resp.raise_for_status()
 
     def lock(self) -> None:
@@ -395,7 +401,9 @@ def create_state_backend(backend_type: str = "local", **kwargs: Any) -> BaseStat
             passphrase=kwargs.get("passphrase"),
         )
     else:
-        raise ValueError(f"Unsupported state backend type: '{backend_type}'. Choose local, http, s3, gcs, or azure.")
+        raise ValueError(
+            f"Unsupported state backend type: '{backend_type}'. Choose local, http, s3, gcs, or azure."
+        )
 
 
 class StateManager:

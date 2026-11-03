@@ -176,7 +176,9 @@ class EnterpriseRulesetProvider(BaseProvider):
                 return None
             for r in rulesets:
                 if r.get("name") == ruleset_name:
-                    detail = self.client.rest("GET", f"/enterprises/{enterprise}/rulesets/{r.get('id')}")
+                    detail = self.client.rest(
+                        "GET", f"/enterprises/{enterprise}/rulesets/{r.get('id')}"
+                    )
                     return ResourceState(
                         resource_id=manifest.resource_id,
                         kind=manifest.kind,
@@ -231,7 +233,9 @@ class EnterpriseRulesetProvider(BaseProvider):
                 ruleset_id = curr.numeric_id if curr else None
 
             if ruleset_id:
-                res = self.client.rest("PUT", f"/enterprises/{enterprise}/rulesets/{ruleset_id}", json_data=desired)
+                res = self.client.rest(
+                    "PUT", f"/enterprises/{enterprise}/rulesets/{ruleset_id}", json_data=desired
+                )
                 numeric_id = ruleset_id
 
         return ResourceState(
@@ -553,7 +557,10 @@ class EnterpriseIPAllowListProvider(BaseProvider):
                 return None
             entries = ent.get("ownerInfo", {}).get("ipAllowListEntries", {}).get("nodes", [])
             for entry in entries:
-                if entry.get("allowListValue") == desired_val or entry.get("name") == manifest.metadata.name:
+                if (
+                    entry.get("allowListValue") == desired_val
+                    or entry.get("name") == manifest.metadata.name
+                ):
                     return ResourceState(
                         resource_id=manifest.resource_id,
                         kind=manifest.kind,
@@ -597,7 +604,9 @@ class EnterpriseIPAllowListProvider(BaseProvider):
         desired = manifest.spec
 
         if plan.action == ActionType.UPDATE and plan.current_state:
-            entry_id = plan.current_state.get("id") or (plan.current_state.get("node_id") if hasattr(plan, "current_state") else None)
+            entry_id = plan.current_state.get("id") or (
+                plan.current_state.get("node_id") if hasattr(plan, "current_state") else None
+            )
             if not entry_id:
                 # Re-query
                 curr = self.read(manifest)
@@ -637,7 +646,9 @@ class EnterpriseIPAllowListProvider(BaseProvider):
             }
             """
             input_payload = {
-                "ownerId": plan.current_state.get("enterprise_id", "") if plan.current_state else "",
+                "ownerId": plan.current_state.get("enterprise_id", "")
+                if plan.current_state
+                else "",
                 "allowListValue": desired.get("allow_list_value"),
                 "name": desired.get("name", manifest.metadata.name),
                 "isActive": desired.get("is_active", True),
@@ -836,7 +847,9 @@ class EnterpriseCustomRoleProvider(BaseProvider):
                 role_id = curr.numeric_id if curr else None
 
             if role_id:
-                res = self.client.rest("PATCH", f"/enterprises/{ent}/custom-roles/{role_id}", json_data=payload)
+                res = self.client.rest(
+                    "PATCH", f"/enterprises/{ent}/custom-roles/{role_id}", json_data=payload
+                )
         else:
             role_id = None
 
@@ -872,7 +885,9 @@ class EnterpriseRunnerGroupProvider(BaseProvider):
                             "name": g.get("name"),
                             "visibility": g.get("visibility"),
                             "selected_organization_ids": g.get("selected_organization_ids", []),
-                            "allows_public_repositories": g.get("allows_public_repositories", False),
+                            "allows_public_repositories": g.get(
+                                "allows_public_repositories", False
+                            ),
                         },
                         applied_spec=manifest.spec,
                         last_updated=datetime.now(timezone.utc).isoformat(),
@@ -920,7 +935,9 @@ class EnterpriseRunnerGroupProvider(BaseProvider):
         }
 
         if plan.action == ActionType.CREATE:
-            res = self.client.rest("POST", f"/enterprises/{ent}/actions/runner-groups", json_data=payload)
+            res = self.client.rest(
+                "POST", f"/enterprises/{ent}/actions/runner-groups", json_data=payload
+            )
             group_id = res.get("id") if isinstance(res, dict) else None
         elif plan.action == ActionType.UPDATE:
             group_id = plan.current_state.get("numeric_id") if plan.current_state else None
@@ -929,7 +946,11 @@ class EnterpriseRunnerGroupProvider(BaseProvider):
                 group_id = curr.numeric_id if curr else None
 
             if group_id:
-                self.client.rest("PATCH", f"/enterprises/{ent}/actions/runner-groups/{group_id}", json_data=payload)
+                self.client.rest(
+                    "PATCH",
+                    f"/enterprises/{ent}/actions/runner-groups/{group_id}",
+                    json_data=payload,
+                )
         else:
             group_id = None
 
@@ -1081,6 +1102,3 @@ class GitHubAppProvider(BaseProvider):
             applied_spec=desired,
             last_updated=datetime.now(timezone.utc).isoformat(),
         )
-
-
-
