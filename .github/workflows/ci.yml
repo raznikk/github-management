@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   lint-and-format:
-    name: Lint & Formatting (Ruff)
+    name: Lint & Formatting (Ruff & Pre-commit)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Repository
@@ -23,17 +23,29 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
-      - name: Check code formatting
+      - name: Cache pre-commit environments
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pre-commit
+          key: pre-commit-${{ runner.os }}-${{ hashFiles('.pre-commit-config.yaml') }}
+          restore-keys: |
+            pre-commit-${{ runner.os }}-
+
+      - name: Run Ruff format check
         run: uv run ruff format --check
 
-      - name: Lint source code
+      - name: Run Ruff linter
         run: uv run ruff check
+
+      - name: Run pre-commit checks
+        run: uv run pre-commit run --all-files
 
   typecheck:
     name: Static Type Checking (mypy)
@@ -46,22 +58,37 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
+      - name: Cache mypy
+        uses: actions/cache@v4
+        with:
+          path: .mypy_cache
+          key: mypy-${{ runner.os }}-${{ hashFiles('src/**/*.py') }}
+          restore-keys: |
+            mypy-${{ runner.os }}-
+
       - name: Run mypy typecheck
         run: uv run --extra dev mypy src/gh_iac
 
   test:
-    name: Unit & Integration Tests (Python ${{ matrix.python-version }})
+    name: Test Suite (Python ${{ matrix.python-version }})
     runs-on: ubuntu-latest
+    continue-on-error: ${{ matrix.experimental || false }}
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14", "3.15"]
+        include:
+          - python-version: "3.14"
+            experimental: true
+          - python-version: "3.15"
+            experimental: true
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -70,11 +97,21 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
+          allow-prereleases: true
+
+      - name: Cache pytest
+        uses: actions/cache@v4
+        with:
+          path: .pytest_cache
+          key: pytest-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('tests/**/*.py', 'src/**/*.py') }}
+          restore-keys: |
+            pytest-${{ runner.os }}-${{ matrix.python-version }}-
 
       - name: Run pytest with code coverage
         run: uv run --extra dev pytest --cov=gh_iac --cov-report=term-missing --cov-report=xml
@@ -98,6 +135,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
+          cache-dependency-glob: "uv.lock"
 
       - name: Set up Python
         uses: actions/setup-python@v5
