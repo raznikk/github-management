@@ -316,6 +316,3 @@ spec:
     - release
   output_credentials:
     private_key_file: ./secrets/release-orchestrator.pem
-
-
-

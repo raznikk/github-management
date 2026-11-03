@@ -4,9 +4,8 @@ import re
 from enum import Enum
 from typing import List
 
-from pydantic import BaseModel
-
 from gh_iac.core.manifest import GitHubManifest
+from pydantic import BaseModel
 
 
 class LintLevel(str, Enum):

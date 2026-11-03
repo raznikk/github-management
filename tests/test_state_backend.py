@@ -4,7 +4,6 @@ from pathlib import Path
 
 import pytest
 import respx
-
 from gh_iac.core.state import (
     LocalStateBackend,
     ResourceState,

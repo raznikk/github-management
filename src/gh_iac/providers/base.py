@@ -4,11 +4,10 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from typing import Any, Dict, Optional
 
-from pydantic import BaseModel
-
 from gh_iac.core.client import GitHubClient
 from gh_iac.core.manifest import GitHubManifest
 from gh_iac.core.state import ResourceState
+from pydantic import BaseModel
 
 
 class ActionType(str, Enum):

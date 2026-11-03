@@ -3,14 +3,13 @@
 import json
 from io import StringIO
 
-from rich.console import Console
-
 from gh_iac.cli.formatters import (
     format_plan_human,
     format_plan_json,
     format_plan_markdown,
 )
 from gh_iac.providers.base import ActionType, ResourcePlan
+from rich.console import Console
 
 
 def test_format_plan_json():

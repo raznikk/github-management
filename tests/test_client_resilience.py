@@ -3,7 +3,6 @@
 import httpx
 import pytest
 import respx
-
 from gh_iac.core.client import GitHubAPIError, GitHubClient
 from gh_iac.core.target import TargetConfig
 

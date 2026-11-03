@@ -3,9 +3,8 @@
 from pathlib import Path
 
 import respx
-from typer.testing import CliRunner
-
 from gh_iac.cli.main import app
+from typer.testing import CliRunner
 
 runner = CliRunner()
 

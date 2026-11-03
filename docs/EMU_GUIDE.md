@@ -21,7 +21,7 @@ graph TD
     IdP[Identity Provider: Okta / Entra ID] -->|SCIM 2.0 Provisioning| SCIM[GitHub SCIM API]
     SCIM --> Users[Enterprise Users: EMUSCIMUser]
     SCIM --> ExtGroups[IdP Groups: EMUExternalGroup]
-    
+
     IaC[gh-iac declarative manifests] -->|Target: emu| Engine[gh-iac Engine]
     Engine --> TeamMap[EMUTeamMapping]
     TeamMap -->|Link external-groups| Teams[GitHub Organization Teams]

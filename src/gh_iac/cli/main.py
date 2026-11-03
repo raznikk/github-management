@@ -5,9 +5,6 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from rich.console import Console
-from rich.table import Table
-
 from gh_iac.cli.formatters import (
     format_plan_human,
     format_plan_json,
@@ -19,6 +16,8 @@ from gh_iac.core.linter import Linter, LintLevel
 from gh_iac.core.state import LocalStateBackend, StateManager
 from gh_iac.core.target import TargetConfig
 from gh_iac.providers.base import ActionType
+from rich.console import Console
+from rich.table import Table
 
 app = typer.Typer(
     name="gh-iac",
@@ -337,7 +336,6 @@ def import_resource(
 ) -> None:
     """Import pre-existing GitHub resources into declarative YAML manifests."""
     import yaml
-
     from gh_iac.core.manifest import GitHubManifest, ManifestMetadata
 
     client = get_client(target, token, enterprise, hostname)

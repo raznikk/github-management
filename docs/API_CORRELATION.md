@@ -416,6 +416,3 @@ This document provides an exhaustive, field-by-field correlation between the dec
 | `public` | `bool` | REST v3 | `PUT` | `/repos/{owner}/{repo}/pages` | `{"public": false}` |
 
 - **Official GitHub Docs:** [GitHub Pages REST API](https://docs.github.com/en/enterprise-cloud@latest/rest/pages)
-
-
-

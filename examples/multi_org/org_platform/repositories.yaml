@@ -123,4 +123,3 @@ spec:
   cname: portal.platform.octocorp.internal
   https_enforced: true
   public: false
-

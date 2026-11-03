@@ -1,7 +1,6 @@
 """Unit tests for Dependency Graph (DAG) and topological concurrency execution."""
 
 import pytest
-
 from gh_iac.core.dag import CyclicDependencyError, DependencyGraph
 from gh_iac.core.manifest import GitHubManifest, ManifestMetadata
 

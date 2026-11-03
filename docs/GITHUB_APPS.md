@@ -14,7 +14,7 @@ flowchart LR
         AppAuth[GitHub App Credentials\nApp ID + RSA Private Key] -->|Signs RS256 JWT| TokenRotation[Installation Token\n1hr TTL Auto-Refresh]
         TokenRotation -->|Authenticates| Engine[gh-iac Reconciler Engine]
     end
-    
+
     subgraph Dimension 2: The Managed Construct
         Engine -->|Provisions via Manifests| EnterpriseApp[Enterprise-Owned App\nGlobal Scope]
         Engine -->|Provisions via Manifests| OrgApp[Organization-Owned App\nTeam / Repo Scope]
@@ -58,13 +58,13 @@ spec:
   url: string                    # Homepage or documentation URL
   description: string            # Human-readable purpose
   public: boolean                # false (internal to org/enterprise) or true
-  
+
   # Webhook delivery configuration (optional)
   hook_attributes:
     url: string                  # Webhook payload endpoint
     secret: string               # Webhook secret (supports env:SECRET or literal)
     active: boolean              # Whether webhooks are delivered
-  
+
   # Fine-grained permissions matrix
   default_permissions:
     <permission_name>: read | write | admin

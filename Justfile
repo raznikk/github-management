@@ -1,31 +1,35 @@
-# Justfile for GitHub IaC Management Engine (gh-iac)
-set shell := ["bash", "-uc"]
-export PATH := env_var('HOME') + "/.local/share/mise/shims:" + env_var('PATH')
+# =============================================================================
+# GitHub IaC Management Engine - Developer Task Runner
+# =============================================================================
 
-# Default recipe: list available recipes
+# Default recipe: display available commands
 default:
     @just --list
 
 # -----------------------------------------------------------------------------
-# Setup & Dependencies
+# Environment & Setup
 # -----------------------------------------------------------------------------
 
-## Install dependencies and editable package
+## Install all dependencies including development tools
 install:
-    uv pip install -e .
+    uv sync --extra dev
 
-## Install development dependencies (pytest, respx, ruff, mypy, pytest-cov)
-install-dev:
-    uv pip install -e ".[dev]"
+## Install git pre-commit hooks into .git/hooks
+pre-commit-install:
+    uv run pre-commit install
+
+## Run all pre-commit hooks against all files
+pre-commit-run:
+    uv run pre-commit run --all-files
 
 # -----------------------------------------------------------------------------
-# Code Quality & Linting
+# Code Quality, Formatting & Static Analysis
 # -----------------------------------------------------------------------------
 
-## Run all static code quality checks (ruff + typecheck)
-check: lint format-check
+## Run all quality checks (linting, format-checking, and static type checking)
+check: lint format-check typecheck
 
-## Lint Python code with Ruff
+## Lint Python source code with Ruff
 lint:
     uv run ruff check
 
@@ -59,43 +63,35 @@ test-verbose:
 
 ## Run tests and output summary code coverage
 cov:
-    uv run --extra dev pytest --cov=gh_iac
-
-## Run tests and output line-by-line missing coverage report
-cov-report:
     uv run --extra dev pytest --cov=gh_iac --cov-report=term-missing
 
-## Generate interactive HTML coverage report in htmlcov/
+## Run tests and generate HTML code coverage report in htmlcov/
 cov-html:
     uv run --extra dev pytest --cov=gh_iac --cov-report=html
-    @echo "Coverage HTML generated at: file://$(pwd)/htmlcov/index.html"
+    @echo "Coverage HTML report generated at htmlcov/index.html"
 
 # -----------------------------------------------------------------------------
-# Declarative Manifest Workflows
+# Manifest Validation & CLI Operations
 # -----------------------------------------------------------------------------
 
-## Validate manifest schema (file or directory, default: examples/full_stack.yaml)
+## Validate declarative manifest schema against Pydantic models
 validate path="examples/full_stack.yaml":
     uv run gh-iac validate {{path}}
 
-## Validate all example stacks (single-file stack and multi-org directory tree)
+## Validate all example manifests in repository
 validate-all:
     uv run gh-iac validate examples/full_stack.yaml
     uv run gh-iac validate examples/multi_org/
 
-## Lint manifest governance and security rules (default: examples/multi_org/)
+## Run security and governance baseline audits
 lint-manifests path="examples/multi_org/":
     uv run gh-iac lint {{path}} --strict
 
-## Compute dry-run plan (default: target=ghec path=examples/multi_org/)
+## Compute plan against target environment (ghec / ghes / emu)
 plan target="ghec" path="examples/multi_org/":
     uv run gh-iac plan {{path}} --target {{target}}
 
-## Compute dry-run plan in machine-readable JSON format
-plan-json target="ghec" path="examples/multi_org/":
-    uv run gh-iac plan {{path}} --target {{target}} --json
-
-## Compute dry-run plan in GitHub Flavored Markdown format
+## Compute plan and output Markdown summary
 plan-markdown target="ghec" path="examples/multi_org/":
     uv run gh-iac plan {{path}} --target {{target}} --markdown
 
@@ -108,21 +104,7 @@ drift target="ghec" path="examples/full_stack.yaml":
     uv run gh-iac drift {{path}} --target {{target}}
 
 # -----------------------------------------------------------------------------
-# Documentation (Jekyll & GitHub Pages)
-# -----------------------------------------------------------------------------
-
-## Preview Jekyll documentation locally (requires jekyll or bundle)
-docs-serve:
-    @if command -v bundle >/dev/null 2>&1; then \
-        bundle exec jekyll serve; \
-    elif command -v jekyll >/dev/null 2>&1; then \
-        jekyll serve; \
-    else \
-        echo "Jekyll not installed locally. Documentation is deployed automatically via GitHub Pages workflow (.github/workflows/pages.yml)."; \
-    fi
-
-# -----------------------------------------------------------------------------
-# Build & Container Packaging
+# Build & Cleanup
 # -----------------------------------------------------------------------------
 
 ## Build python distribution wheel and sdist
@@ -135,5 +117,5 @@ docker-build:
 
 ## Clean temporary files, build caches, and test artifacts
 clean:
-    rm -rf build/ dist/ *.egg-info .pytest_cache/ htmlcov/ .coverage* .ruff_cache/
+    rm -rf build/ dist/ *.egg-info .pytest_cache/ htmlcov/ .coverage* .ruff_cache/ .mypy_cache/
     find . -type d -name __pycache__ -exec rm -rf {} +

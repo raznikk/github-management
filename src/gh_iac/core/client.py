@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any, Dict, Optional
 
 import httpx
-
 from gh_iac.core.target import TargetConfig
 
 logger = logging.getLogger("gh_iac.client")
@@ -188,7 +187,8 @@ class GitHubClient:
                 errors=data["errors"],
             )
 
-        return data.get("data", {})
+        res_data = data.get("data")
+        return res_data if isinstance(res_data, dict) else {}
 
     # --- REST & SCIM Layer (Fallback & Specialized) ---
 
