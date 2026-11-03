@@ -24,6 +24,7 @@ def is_sensitive(key_path: str) -> bool:
 @dataclass
 class StructuralDiff:
     """Represents structural differences between current and desired state."""
+
     changes: Dict[str, Dict[str, Any]] = field(default_factory=dict)
 
     @property

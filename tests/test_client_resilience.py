@@ -126,5 +126,3 @@ def test_client_proxy_and_ca_bundle():
     assert config.proxy == "http://proxy.corp.internal:8080"
     client = GitHubClient(config)
     assert client.http_client._transport is not None
-
-

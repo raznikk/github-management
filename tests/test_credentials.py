@@ -67,4 +67,3 @@ def test_encrypt_github_secret_roundtrip():
     sealed_box = public.SealedBox(private_key)
     decrypted = sealed_box.decrypt(base64.b64decode(encrypted_b64.encode("utf-8"))).decode("utf-8")
     assert decrypted == plaintext
-

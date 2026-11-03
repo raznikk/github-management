@@ -46,7 +46,9 @@ def format_plan_human(plans: List[ResourcePlan], console: Console) -> None:
     active_plans = [p for p in plans if p.action != ActionType.NOOP]
 
     if not active_plans:
-        console.print("[bold green]No changes. Your infrastructure matches the configuration.[/bold green]")
+        console.print(
+            "[bold green]No changes. Your infrastructure matches the configuration.[/bold green]"
+        )
         return
 
     console.print("\n[bold]GitHub IaC will perform the following actions:[/bold]\n")
@@ -56,15 +58,19 @@ def format_plan_human(plans: List[ResourcePlan], console: Console) -> None:
 
         if p.action == ActionType.CREATE:
             console.print(f"  [bold green]# {p.kind}.{clean_id} will be created:[/bold green]")
-            console.print(f"  [green]+ resource \"{p.kind}\" \"{clean_id}\" {{[/green]")
+            console.print(f'  [green]+ resource "{p.kind}" "{clean_id}" {{[/green]')
             for k, v in sorted(p.desired_state.items()):
                 if v is not None and v != "":
-                    console.print(f"  [green]+   {k} = {json.dumps(v) if isinstance(v, (dict, list)) else v}[/green]")
+                    console.print(
+                        f"  [green]+   {k} = {json.dumps(v) if isinstance(v, (dict, list)) else v}[/green]"
+                    )
             console.print("  [green]+ }[/green]\n")
 
         elif p.action == ActionType.UPDATE:
-            console.print(f"  [bold yellow]# {p.kind}.{clean_id} will be updated in-place:[/bold yellow]")
-            console.print(f"  [yellow]~ resource \"{p.kind}\" \"{clean_id}\" {{[/yellow]")
+            console.print(
+                f"  [bold yellow]# {p.kind}.{clean_id} will be updated in-place:[/bold yellow]"
+            )
+            console.print(f'  [yellow]~ resource "{p.kind}" "{clean_id}" {{[/yellow]')
             for k, change in sorted(p.diff.items()):
                 if isinstance(change, dict) and "old" in change and "new" in change:
                     old_v = change["old"]
@@ -76,7 +82,7 @@ def format_plan_human(plans: List[ResourcePlan], console: Console) -> None:
 
         elif p.action == ActionType.DELETE:
             console.print(f"  [bold red]# {p.kind}.{clean_id} will be destroyed:[/bold red]")
-            console.print(f"  [red]- resource \"{p.kind}\" \"{clean_id}\" {{[/red]")
+            console.print(f'  [red]- resource "{p.kind}" "{clean_id}" {{[/red]')
             for k, v in sorted(p.desired_state.items()):
                 console.print(f"  [red]-   {k} = {v}[/red]")
             console.print("  [red]- }[/red]\n")
@@ -98,7 +104,9 @@ def format_plan_markdown(plans: List[ResourcePlan]) -> str:
     md: List[str] = []
     md.append("### GitHub IaC Execution Plan")
     md.append("")
-    md.append(f"**Plan:** {creates} to add, {updates} to change, {deletes} to destroy, {noops} unchanged.")
+    md.append(
+        f"**Plan:** {creates} to add, {updates} to change, {deletes} to destroy, {noops} unchanged."
+    )
     md.append("")
 
     active = [p for p in plans if p.action != ActionType.NOOP]
@@ -133,13 +141,13 @@ def format_plan_markdown(plans: List[ResourcePlan]) -> str:
     for p in active:
         clean_id = p.resource_id.split("/", 1)[-1] if "/" in p.resource_id else p.resource_id
         if p.action == ActionType.CREATE:
-            md.append(f"+ resource \"{p.kind}\" \"{clean_id}\" {{")
+            md.append(f'+ resource "{p.kind}" "{clean_id}" {{')
             for k, v in sorted(p.desired_state.items()):
                 if v is not None and v != "":
                     md.append(f"+   {k} = {v}")
             md.append("+ }")
         elif p.action == ActionType.UPDATE:
-            md.append(f"! resource \"{p.kind}\" \"{clean_id}\" {{")
+            md.append(f'! resource "{p.kind}" "{clean_id}" {{')
             for k, change in sorted(p.diff.items()):
                 if isinstance(change, dict) and "old" in change and "new" in change:
                     md.append(f"!   {k}: {change['old']} => {change['new']}")

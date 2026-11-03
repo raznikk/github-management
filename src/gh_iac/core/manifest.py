@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 class ManifestMetadata(BaseModel):
     """Metadata identifying the construct in the IaC hierarchy."""
+
     name: str = Field(..., description="Unique name/identifier for the resource")
     enterprise: Optional[str] = Field(None, description="Enterprise slug if enterprise-scoped")
     organization: Optional[str] = Field(None, description="Organization login if org-scoped")
@@ -18,6 +19,7 @@ class GitHubManifest(BaseModel):
     """
     Standard declarative resource manifest, modeled after cloud native / CRD patterns.
     """
+
     apiVersion: str = Field(
         default="github.iac/v1alpha1",
         description="API schema version",

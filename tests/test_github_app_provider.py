@@ -53,7 +53,9 @@ def test_create_organization_app(tmp_path: Path):
     assert plan.action == ActionType.CREATE
 
     # 3. Apply: POST /orgs/octocorp-cloud/apps
-    dummy_pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----"
+    dummy_pem = (
+        "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA...\n-----END RSA PRIVATE KEY-----"
+    )
     respx.post("https://api.github.com/orgs/octocorp-cloud/apps").respond(
         status_code=201,
         json={
@@ -121,7 +123,9 @@ def test_create_enterprise_app(tmp_path: Path):
     assert plan.action == ActionType.CREATE
 
     # 3. Apply: POST /enterprises/octocorp/apps
-    dummy_pem = "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA_ENT...\n-----END RSA PRIVATE KEY-----"
+    dummy_pem = (
+        "-----BEGIN RSA PRIVATE KEY-----\nMIIEowIBAAKCAQEA_ENT...\n-----END RSA PRIVATE KEY-----"
+    )
     respx.post("https://api.github.com/enterprises/octocorp/apps").respond(
         status_code=201,
         json={

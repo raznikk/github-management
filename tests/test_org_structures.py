@@ -12,6 +12,7 @@ from gh_iac.providers.organization import (
     OrganizationVariableProvider,
     OrganizationWebhookProvider,
 )
+from gh_iac.providers.repository import RepositoryPagesProvider
 
 
 def get_test_client():
@@ -185,3 +186,65 @@ def test_organization_runner_group_provider_lifecycle():
     )
     new_state = provider.apply(plan, manifest)
     assert new_state.numeric_id == 9911
+
+
+@respx.mock
+def test_repository_pages_provider_lifecycle():
+    client = get_test_client()
+    provider = RepositoryPagesProvider(client)
+
+    manifest = GitHubManifest(
+        kind="RepositoryPages",
+        metadata=ManifestMetadata(
+            name="developer-portal-docs",
+            organization="octocorp-cloud",
+            repository="developer-service-catalog",
+        ),
+        spec={
+            "build_type": "workflow",
+            "source": {
+                "branch": "main",
+                "path": "/docs",
+            },
+            "cname": "docs.octocorp.internal",
+            "https_enforced": True,
+            "public": False,
+        },
+    )
+
+    # 1. Read non-existent
+    respx.get(
+        "https://api.github.com/repos/octocorp-cloud/developer-service-catalog/pages"
+    ).respond(status_code=404)
+    current = provider.read(manifest)
+    assert current is None
+
+    # 2. Plan CREATE
+    plan = provider.plan(manifest, current)
+    assert plan.action == ActionType.CREATE
+
+    # 3. Apply CREATE
+    respx.post(
+        "https://api.github.com/repos/octocorp-cloud/developer-service-catalog/pages"
+    ).respond(
+        status_code=201,
+        json={
+            "status": "built",
+            "html_url": "https://octocorp-cloud.github.io/developer-service-catalog",
+            "build_type": "workflow",
+        },
+    )
+    respx.put(
+        "https://api.github.com/repos/octocorp-cloud/developer-service-catalog/pages"
+    ).respond(
+        status_code=200,
+        json={
+            "status": "built",
+            "cname": "docs.octocorp.internal",
+            "https_enforced": True,
+        },
+    )
+
+    state = provider.apply(plan, manifest)
+    assert state.resource_id == manifest.resource_id
+    assert state.url == "https://octocorp-cloud.github.io/developer-service-catalog"

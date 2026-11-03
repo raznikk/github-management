@@ -85,7 +85,9 @@ class OrganizationProvider(BaseProvider):
                 "admin": desired.get("admin", "admin"),
             }
             # REST: POST /enterprises/{enterprise}/orgs
-            self.client.rest("POST", f"/enterprises/{manifest.metadata.enterprise}/orgs", json_data=payload)
+            self.client.rest(
+                "POST", f"/enterprises/{manifest.metadata.enterprise}/orgs", json_data=payload
+            )
 
         # Update org attributes (PATCH /orgs/{org})
         self.client.rest("PATCH", f"/orgs/{org_login}", json_data=desired)
@@ -248,11 +250,24 @@ class OrganizationSecretProvider(BaseProvider):
             )
 
         diff: Dict[str, Any] = {}
-        if "visibility" in desired and current.attributes.get("visibility") != desired["visibility"]:
-            diff["visibility"] = {"old": current.attributes.get("visibility"), "new": desired["visibility"]}
+        if (
+            "visibility" in desired
+            and current.attributes.get("visibility") != desired["visibility"]
+        ):
+            diff["visibility"] = {
+                "old": current.attributes.get("visibility"),
+                "new": desired["visibility"],
+            }
 
-        if "selected_repository_ids" in desired and current.attributes.get("selected_repository_ids") != desired["selected_repository_ids"]:
-            diff["selected_repository_ids"] = {"old": current.attributes.get("selected_repository_ids"), "new": desired["selected_repository_ids"]}
+        if (
+            "selected_repository_ids" in desired
+            and current.attributes.get("selected_repository_ids")
+            != desired["selected_repository_ids"]
+        ):
+            diff["selected_repository_ids"] = {
+                "old": current.attributes.get("selected_repository_ids"),
+                "new": desired["selected_repository_ids"],
+            }
 
         # Secrets are always re-applied on update
         diff["value"] = {"old": "******", "new": "******"}
@@ -382,7 +397,9 @@ class OrganizationRulesetProvider(BaseProvider):
                 ruleset_id = curr.numeric_id if curr else None
 
             if ruleset_id:
-                res = self.client.rest("PUT", f"/orgs/{org}/rulesets/{ruleset_id}", json_data=desired)
+                res = self.client.rest(
+                    "PUT", f"/orgs/{org}/rulesets/{ruleset_id}", json_data=desired
+                )
                 numeric_id = ruleset_id
 
         return ResourceState(
@@ -470,7 +487,9 @@ class OrganizationVariableProvider(BaseProvider):
         if plan.action == ActionType.CREATE:
             self.client.rest("POST", f"/orgs/{org}/actions/variables", json_data=payload)
         elif plan.action == ActionType.UPDATE:
-            self.client.rest("PATCH", f"/orgs/{org}/actions/variables/{var_name}", json_data=payload)
+            self.client.rest(
+                "PATCH", f"/orgs/{org}/actions/variables/{var_name}", json_data=payload
+            )
 
         return ResourceState(
             resource_id=manifest.resource_id,
@@ -650,7 +669,9 @@ class OrganizationRunnerGroupProvider(BaseProvider):
                 group_id = curr.numeric_id if curr else None
 
             if group_id:
-                res = self.client.rest("PATCH", f"/orgs/{org}/actions/runner-groups/{group_id}", json_data=payload)
+                res = self.client.rest(
+                    "PATCH", f"/orgs/{org}/actions/runner-groups/{group_id}", json_data=payload
+                )
                 numeric_id = group_id
 
         return ResourceState(
@@ -661,4 +682,3 @@ class OrganizationRunnerGroupProvider(BaseProvider):
             applied_spec=desired,
             last_updated=datetime.now(timezone.utc).isoformat(),
         )
-

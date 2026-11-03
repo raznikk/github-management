@@ -8,6 +8,7 @@ from gh_iac.core.manifest import GitHubManifest
 
 class CyclicDependencyError(Exception):
     """Raised when circular dependencies exist between resource manifests."""
+
     pass
 
 

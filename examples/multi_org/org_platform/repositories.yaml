@@ -108,3 +108,19 @@ spec:
   visibility: internal
   has_issues: true
   delete_branch_on_merge: true
+---
+apiVersion: github.iac/v1alpha1
+kind: RepositoryPages
+metadata:
+  name: developer-portal-pages
+  organization: octocorp-platform
+  repository: developer-service-catalog
+spec:
+  build_type: workflow
+  source:
+    branch: main
+    path: /docs
+  cname: portal.platform.octocorp.internal
+  https_enforced: true
+  public: false
+

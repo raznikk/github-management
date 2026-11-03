@@ -8,13 +8,15 @@ from pydantic import BaseModel, Field
 
 class TargetEnvironment(str, Enum):
     """Supported GitHub hosting flavors."""
-    GHEC = "ghec"          # GitHub Enterprise Cloud
-    GHES = "ghes"          # GitHub Enterprise Server
+
+    GHEC = "ghec"  # GitHub Enterprise Cloud
+    GHES = "ghes"  # GitHub Enterprise Server
     GHEC_EMU = "ghec_emu"  # GHEC Enterprise Managed Users
 
 
 class TargetConfig(BaseModel):
     """Configuration for target GitHub environment."""
+
     environment: TargetEnvironment = Field(
         default=TargetEnvironment.GHEC,
         description="The flavor of GitHub being targeted",

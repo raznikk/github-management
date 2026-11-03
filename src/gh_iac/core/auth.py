@@ -64,7 +64,9 @@ class GitHubAppAuthenticator:
             self._cached_token = data["token"]
             expires_at_str = data.get("expires_at")
             if expires_at_str:
-                self._token_expires_at = datetime.fromisoformat(expires_at_str.replace("Z", "+00:00"))
+                self._token_expires_at = datetime.fromisoformat(
+                    expires_at_str.replace("Z", "+00:00")
+                )
             else:
                 self._token_expires_at = now + timedelta(hours=1)
 

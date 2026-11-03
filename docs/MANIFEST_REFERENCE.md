@@ -165,6 +165,46 @@ spec:
 
 ---
 
+### `EnterpriseSecurityConfiguration`
+Declares enterprise Code Security Configurations for repositories. Enables security architects to define standardized GHAS profiles, lock configurations to prevent organization/repository administrators from disabling protection, set enterprise-wide defaults for new repositories, and bind configurations to specific repositories.
+
+- **Metadata Scopes:** `enterprise` (required), `name` (configuration name)
+- **Key Spec Properties:**
+  - `advanced_security` (str): `"enabled"` or `"disabled"`.
+  - `secret_scanning` (str): `"enabled"` or `"disabled"`.
+  - `secret_scanning_push_protection` (str): `"enabled"` or `"disabled"`.
+  - `secret_scanning_validity_checks` (str): `"enabled"` or `"disabled"`.
+  - `code_scanning_default_setup` (str): `"enabled"` or `"disabled"`.
+  - `dependabot_alerts` (str): `"enabled"` or `"disabled"`.
+  - `dependabot_security_updates` (str): `"enabled"` or `"disabled"`.
+  - `private_vulnerability_reporting` (str): `"enabled"` or `"disabled"`.
+  - `enforcement` (str): `"enforced"` (locks settings against repo admin override) or `"unenforced"`.
+  - `default_for_new_repos` (optional str): `"all"`, `"none"`, or `"eligible"`.
+  - `repositories` (optional list[int]): List of repository numeric IDs attached to this configuration.
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: EnterpriseSecurityConfiguration
+metadata:
+  name: strict-tier1-ghas-profile
+  enterprise: octocorp
+spec:
+  name: strict-tier1-ghas-profile
+  description: Strict GHAS enforcement for mission-critical repositories
+  advanced_security: enabled
+  secret_scanning: enabled
+  secret_scanning_push_protection: enabled
+  secret_scanning_validity_checks: enabled
+  code_scanning_default_setup: enabled
+  dependabot_alerts: enabled
+  dependabot_security_updates: enabled
+  private_vulnerability_reporting: enabled
+  enforcement: enforced
+  default_for_new_repos: all
+```
+
+---
+
 ### `EnterpriseRuleset`
 Declares enterprise-wide repository rulesets that enforce governance (mandatory branch protections, code reviews, status checks, commit signatures, linear history) across all organizations and repositories in the enterprise.
 
@@ -565,4 +605,36 @@ spec:
     - type: required_status_checks
       parameters:
         strict_required_status_checks_policy: true
+```
+
+---
+
+### `RepositoryPages`
+Configures GitHub Pages publishing sites for repositories. Supports deploying from GitHub Actions workflows, branch/directory sources, custom domains (`cname`), HTTPS enforcement, and private Pages access control on Enterprise Cloud / Server.
+
+- **Metadata Scopes:** `organization`, `repository` (required)
+- **Key Spec Properties:**
+  - `build_type` (str): `"workflow"` (modern Actions artifact deployment) or `"legacy"` (deploy from branch).
+  - `source` (dict):
+    - `branch` (str): Source branch (e.g. `"main"`, `"gh-pages"`).
+    - `path` (str): Source directory (`"/"` or `"/docs"`).
+  - `cname` (optional str): Custom domain name (e.g. `"docs.octocorp.internal"`).
+  - `https_enforced` (bool): Require HTTPS for all requests.
+  - `public` (bool): Whether the Pages site is publicly accessible or restricted to organization members (Enterprise Cloud / Server).
+
+```yaml
+apiVersion: github.iac/v1alpha1
+kind: RepositoryPages
+metadata:
+  name: developer-portal-pages
+  organization: octocorp-cloud
+  repository: core-infrastructure
+spec:
+  build_type: workflow
+  source:
+    branch: main
+    path: /docs
+  cname: docs.octocorp.internal
+  https_enforced: true
+  public: false
 ```

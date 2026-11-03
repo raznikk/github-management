@@ -50,7 +50,9 @@ def test_org_secret_plan_and_apply():
         status_code=200,
         json={"key_id": "KEY_ORG_123", "key": pub_key_b64},
     )
-    put_route = respx.put("https://api.github.com/orgs/octocorp/actions/secrets/DATADOG_API_KEY").respond(
+    put_route = respx.put(
+        "https://api.github.com/orgs/octocorp/actions/secrets/DATADOG_API_KEY"
+    ).respond(
         status_code=201,
     )
 
@@ -89,7 +91,9 @@ def test_repo_secret_plan_and_apply():
     )
 
     # 1. Read: 404
-    respx.get("https://api.github.com/repos/octocorp/infra-app/actions/secrets/DEPLOY_TOKEN").respond(
+    respx.get(
+        "https://api.github.com/repos/octocorp/infra-app/actions/secrets/DEPLOY_TOKEN"
+    ).respond(
         status_code=404,
     )
     current = provider.read(manifest)
@@ -104,7 +108,9 @@ def test_repo_secret_plan_and_apply():
         status_code=200,
         json={"key_id": "KEY_REPO_456", "key": pub_key_b64},
     )
-    put_route = respx.put("https://api.github.com/repos/octocorp/infra-app/actions/secrets/DEPLOY_TOKEN").respond(
+    put_route = respx.put(
+        "https://api.github.com/repos/octocorp/infra-app/actions/secrets/DEPLOY_TOKEN"
+    ).respond(
         status_code=204,
     )
 

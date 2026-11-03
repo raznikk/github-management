@@ -1,0 +1,35 @@
+title: "GitHub IaC Management Engine"
+description: "Declarative Infrastructure-as-Code for GitHub Enterprise Cloud, Server, and EMU"
+baseurl: "" # the subpath of your site, e.g. /blog
+url: "https://raznikk.github.io" # the base hostname & protocol for your site
+repository: "raznikk/github-management"
+
+# GitHub Pages Theme
+theme: jekyll-theme-cayman
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    block:
+      line_numbers: false
+
+# Plugins supported by GitHub Pages
+plugins:
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - .venv/
+  - .pytest_cache/
+  - .ruff_cache/
+  - htmlcov/
+  - tests/
+  - dist/
+  - build/
+  - Dockerfile
+  - Justfile

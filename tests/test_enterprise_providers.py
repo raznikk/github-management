@@ -16,6 +16,7 @@ from gh_iac.providers.enterprise import (
     EnterpriseRulesetProvider,
     EnterpriseRunnerGroupProvider,
 )
+from gh_iac.providers.governance import EnterpriseSecurityConfigurationProvider
 
 
 @respx.mock
@@ -38,7 +39,9 @@ def test_emu_team_mapping_plan_and_apply():
     )
 
     # 1. Read: Initially no external group linked
-    respx.get("https://api.github.com/orgs/octocorp-cloud/teams/cloud-platform-team/external-groups").respond(
+    respx.get(
+        "https://api.github.com/orgs/octocorp-cloud/teams/cloud-platform-team/external-groups"
+    ).respond(
         status_code=200,
         json={"groups": []},
     )
@@ -52,7 +55,9 @@ def test_emu_team_mapping_plan_and_apply():
     assert plan.desired_state["group_id"] == 98765
 
     # 3. Apply: POST to link external group to team
-    respx.patch("https://api.github.com/orgs/octocorp-cloud/teams/cloud-platform-team/external-groups").respond(
+    respx.patch(
+        "https://api.github.com/orgs/octocorp-cloud/teams/cloud-platform-team/external-groups"
+    ).respond(
         status_code=200,
         json={"group_id": 98765, "group_name": "Cloud-Platform-Engineers"},
     )
@@ -131,14 +136,7 @@ def test_enterprise_ip_allow_list_plan_and_apply():
         status_code=200,
         json={
             "data": {
-                "enterprise": {
-                    "id": "ENT_123",
-                    "ownerInfo": {
-                        "ipAllowListEntries": {
-                            "nodes": []
-                        }
-                    }
-                }
+                "enterprise": {"id": "ENT_123", "ownerInfo": {"ipAllowListEntries": {"nodes": []}}}
             }
         },
     )
@@ -323,12 +321,21 @@ def test_enterprise_ip_allow_list_update():
 
     # Current state exists with node ID
     from gh_iac.core.state import ResourceState
+
     current = ResourceState(
         resource_id=manifest.resource_id,
         kind=manifest.kind,
         node_id="IP_ENTRY_999",
-        attributes={"name": "Corporate VPN Egress", "allow_list_value": "198.51.100.0/24", "is_active": True},
-        applied_spec={"name": "Corporate VPN Egress", "allow_list_value": "198.51.100.0/24", "is_active": True},
+        attributes={
+            "name": "Corporate VPN Egress",
+            "allow_list_value": "198.51.100.0/24",
+            "is_active": True,
+        },
+        applied_spec={
+            "name": "Corporate VPN Egress",
+            "allow_list_value": "198.51.100.0/24",
+            "is_active": True,
+        },
     )
 
     plan = provider.plan(manifest, current)
@@ -399,7 +406,9 @@ def test_enterprise_policy_plan_and_apply():
         status_code=200,
         json={"enabled_repositories": "all", "allowed_actions": "all"},
     )
-    respx.get("https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions").respond(
+    respx.get(
+        "https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions"
+    ).respond(
         status_code=200,
         json={},
     )
@@ -414,7 +423,9 @@ def test_enterprise_policy_plan_and_apply():
         status_code=200,
         json={"enabled_repositories": "all", "allowed_actions": "selected"},
     )
-    respx.put("https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions").respond(
+    respx.put(
+        "https://api.github.com/enterprises/octocorp/actions/permissions/selected-actions"
+    ).respond(
         status_code=200,
         json={"github_owned_allowed": True, "verified_allowed": True},
     )
@@ -482,3 +493,64 @@ def test_enterprise_ruleset_plan_and_apply():
     assert state.attributes["name"] == "ent-branch-governance"
 
 
+@respx.mock
+def test_enterprise_security_configuration_plan_and_apply():
+    config = TargetConfig.create_for_ghec(token="test-token", enterprise_slug="octocorp")
+    client = GitHubClient(config)
+    provider = EnterpriseSecurityConfigurationProvider(client)
+
+    manifest = GitHubManifest(
+        kind="EnterpriseSecurityConfiguration",
+        metadata=ManifestMetadata(
+            name="strict-ghas-profile",
+            enterprise="octocorp",
+        ),
+        spec={
+            "name": "strict-ghas-profile",
+            "description": "Strict GHAS enforcement for repositories",
+            "advanced_security": "enabled",
+            "secret_scanning": "enabled",
+            "secret_scanning_push_protection": "enabled",
+            "code_scanning_default_setup": "enabled",
+            "dependabot_alerts": "enabled",
+            "dependabot_security_updates": "enabled",
+            "enforcement": "enforced",
+            "default_for_new_repos": "all",
+            "repositories": [554433, 998811],
+        },
+    )
+
+    # 1. Read: initially empty
+    respx.get("https://api.github.com/enterprises/octocorp/code-security/configurations").respond(
+        status_code=200,
+        json=[],
+    )
+
+    current = provider.read(manifest)
+    assert current is None
+
+    # 2. Plan: CREATE
+    plan = provider.plan(manifest, current)
+    assert plan.action == ActionType.CREATE
+
+    # 3. Apply: POST configuration, PUT default, POST repositories
+    respx.post("https://api.github.com/enterprises/octocorp/code-security/configurations").respond(
+        status_code=201,
+        json={"id": 1234, "name": "strict-ghas-profile", "enforcement": "enforced"},
+    )
+    respx.put(
+        "https://api.github.com/enterprises/octocorp/code-security/configurations/1234/defaults"
+    ).respond(
+        status_code=200,
+        json={"default_for_new_repos": "all"},
+    )
+    respx.post(
+        "https://api.github.com/enterprises/octocorp/code-security/configurations/1234/repositories"
+    ).respond(
+        status_code=200,
+        json={"attached": 2},
+    )
+
+    state = provider.apply(plan, manifest)
+    assert state.numeric_id == 1234
+    assert state.attributes["enforcement"] == "enforced"
