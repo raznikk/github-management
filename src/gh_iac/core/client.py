@@ -188,7 +188,8 @@ class GitHubClient:
                 errors=data["errors"],
             )
 
-        return data.get("data", {})
+        res_data = data.get("data")
+        return res_data if isinstance(res_data, dict) else {}
 
     # --- REST & SCIM Layer (Fallback & Specialized) ---
 

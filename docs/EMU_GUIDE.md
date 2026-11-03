@@ -1,3 +1,8 @@
+---
+layout: default
+title: EMU Identity Synchronization Guide
+---
+
 # GitHub Enterprise Managed Users (EMU): Identity Synchronization Guide & Best Practices
 
 This guide covers architecture, identity synchronization, and automated IdP-to-Team mapping for GitHub Enterprise Cloud with Enterprise Managed Users (GHEC EMU) managed via `gh-iac`.
@@ -21,7 +26,7 @@ graph TD
     IdP[Identity Provider: Okta / Entra ID] -->|SCIM 2.0 Provisioning| SCIM[GitHub SCIM API]
     SCIM --> Users[Enterprise Users: EMUSCIMUser]
     SCIM --> ExtGroups[IdP Groups: EMUExternalGroup]
-    
+
     IaC[gh-iac declarative manifests] -->|Target: emu| Engine[gh-iac Engine]
     Engine --> TeamMap[EMUTeamMapping]
     TeamMap -->|Link external-groups| Teams[GitHub Organization Teams]

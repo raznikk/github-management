@@ -13,12 +13,13 @@ A declarative Infrastructure-as-Code (IaC) management system for GitHub, support
 
 | Guide | Description |
 | :--- | :--- |
-| 📖 [**Manifest Reference Guide**](docs/MANIFEST_REFERENCE.md) | Comprehensive specifications for all 24 declarative construct Kinds. |
-| 🔗 [**API Correlation Matrix**](docs/API_CORRELATION.md) | Field-by-field mapping between manifests and GitHub REST v3, GraphQL v4, and SCIM 2.0. |
-| 🤖 [**GitHub Apps Management**](docs/GITHUB_APPS.md) | Declarative provisioning of Enterprise & Org GitHub Apps with automated RSA key generation and ruleset bypass. |
-| 👥 [**EMU Identity Synchronization**](docs/EMU_GUIDE.md) | Okta/Entra ID SCIM 2.0 provisioning architecture and IdP-to-Team group mapping. |
-| 🏢 [**GHES Compatibility Matrix**](docs/GHES_COMPATIBILITY.md) | Compatibility across GHES 3.10–3.14+, air-gapped TLS custom CA certificates, and corporate HTTP proxy setup. |
-| 📐 [**Architecture Deep Dive**](ARCHITECTURE.md) | GraphQL-first engine, DAG topological concurrency, and AES-256-GCM encrypted state backends. |
+| 📖 [**Manifest Reference Guide**]({{ '/docs/MANIFEST_REFERENCE.html' | relative_url }}) | Comprehensive specifications for all 24 declarative construct Kinds. |
+| 🔗 [**API Correlation Matrix**]({{ '/docs/API_CORRELATION.html' | relative_url }}) | Field-by-field mapping between manifests and GitHub REST v3, GraphQL v4, and SCIM 2.0. |
+| 🤖 [**GitHub Apps Management**]({{ '/docs/GITHUB_APPS.html' | relative_url }}) | Declarative provisioning of Enterprise & Org GitHub Apps with automated RSA key generation and ruleset bypass. |
+| 👥 [**EMU Identity Synchronization**]({{ '/docs/EMU_GUIDE.html' | relative_url }}) | Okta/Entra ID SCIM 2.0 provisioning architecture and IdP-to-Team group mapping. |
+| 🏢 [**GHES Compatibility Matrix**]({{ '/docs/GHES_COMPATIBILITY.html' | relative_url }}) | Compatibility across GHES 3.10–3.14+, air-gapped TLS custom CA certificates, and corporate HTTP proxy setup. |
+| 📐 [**Architecture Deep Dive**]({{ '/ARCHITECTURE.html' | relative_url }}) | GraphQL-first engine, DAG topological concurrency, and AES-256-GCM encrypted state backends. |
+| 📋 [**Roadmap & Implementation Tracker**]({{ '/TODO.html' | relative_url }}) | Production hardening checklist, provider coverage, and implementation status. |
 
 ---
 

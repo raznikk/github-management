@@ -9,9 +9,13 @@ class ManifestMetadata(BaseModel):
     """Metadata identifying the construct in the IaC hierarchy."""
 
     name: str = Field(..., description="Unique name/identifier for the resource")
-    enterprise: Optional[str] = Field(None, description="Enterprise slug if enterprise-scoped")
-    organization: Optional[str] = Field(None, description="Organization login if org-scoped")
-    repository: Optional[str] = Field(None, description="Repository name if repo-scoped")
+    enterprise: Optional[str] = Field(
+        default=None, description="Enterprise slug if enterprise-scoped"
+    )
+    organization: Optional[str] = Field(
+        default=None, description="Organization login if org-scoped"
+    )
+    repository: Optional[str] = Field(default=None, description="Repository name if repo-scoped")
     labels: Dict[str, str] = Field(default_factory=dict, description="Metadata labels/tags")
 
 
