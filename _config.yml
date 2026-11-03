@@ -1,11 +1,12 @@
 title: "GitHub IaC Management Engine"
 description: "Declarative Infrastructure-as-Code for GitHub Enterprise Cloud, Server, and EMU"
-baseurl: "" # the subpath of your site, e.g. /blog
-url: "https://raznikk.github.io" # the base hostname & protocol for your site
+baseurl: "/github-management" # repository subpath on GitHub Pages
+url: "https://raznikk.github.io" # base hostname & protocol
 repository: "raznikk/github-management"
 
 # GitHub Pages Theme
 theme: jekyll-theme-cayman
+remote_theme: pages-themes/cayman
 
 # Build settings
 markdown: kramdown
@@ -21,12 +22,14 @@ kramdown:
 plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
+  - jekyll-remote-theme
 
 # Exclude from processing
 exclude:
   - .venv/
   - .pytest_cache/
   - .ruff_cache/
+  - .mypy_cache/
   - htmlcov/
   - tests/
   - dist/
