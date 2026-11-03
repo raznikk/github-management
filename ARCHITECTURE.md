@@ -1,3 +1,8 @@
+---
+layout: default
+title: Architecture Deep Dive
+---
+
 # GitHub IaC Management Engine Architecture & Design Plan
 
 ## 1. Executive Summary & Goals

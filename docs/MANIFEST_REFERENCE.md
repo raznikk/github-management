@@ -1,3 +1,8 @@
+---
+layout: default
+title: GitHub IaC Manifest Reference
+---
+
 # GitHub IaC Manifest Reference
 
 This document provides a comprehensive specification reference for all declarative constructs supported by `gh-iac` across GitHub Enterprise Cloud (GHEC), GitHub Enterprise Server (GHES), and GHEC Enterprise Managed Users (EMU).

@@ -1,3 +1,8 @@
+---
+layout: default
+title: EMU Identity Synchronization Guide
+---
+
 # GitHub Enterprise Managed Users (EMU): Identity Synchronization Guide & Best Practices
 
 This guide covers architecture, identity synchronization, and automated IdP-to-Team mapping for GitHub Enterprise Cloud with Enterprise Managed Users (GHEC EMU) managed via `gh-iac`.

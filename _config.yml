@@ -23,6 +23,11 @@ plugins:
   - jekyll-seo-tag
   - jekyll-sitemap
   - jekyll-remote-theme
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true
 
 # Exclude from processing
 exclude:

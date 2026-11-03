@@ -1,3 +1,8 @@
+---
+layout: default
+title: GitHub API Correlation
+---
+
 # GitHub API Correlation: Manifest Specs to REST & GraphQL APIs
 
 This document provides an exhaustive, field-by-field correlation between the declarative manifests in [`examples/full_stack.yaml`](file:///home/bbritt/Code/github-management/examples/full_stack.yaml) and the official GitHub REST v3, GraphQL v4, and SCIM 2.0 API surfaces implemented by `gh-iac`.

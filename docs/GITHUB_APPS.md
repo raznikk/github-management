@@ -1,3 +1,8 @@
+---
+layout: default
+title: Declarative GitHub Apps Management
+---
+
 # Declarative GitHub Apps Management in `gh-iac`
 
 This document details how **GitHub Apps** are declared, provisioned, and managed using `gh-iac` across **GitHub Enterprise Cloud (GHEC)**, **GitHub Enterprise Server (GHES)**, and **GHEC Enterprise Managed Users (EMU)**.

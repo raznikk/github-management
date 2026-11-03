@@ -1,3 +1,8 @@
+---
+layout: default
+title: GHES Compatibility Matrix
+---
+
 # GitHub Enterprise Server (GHES) Compatibility Matrix & Operations Guide
 
 This document details compatibility, networking requirements, TLS/custom CA bundles, and corporate proxy support when running `gh-iac` against self-hosted **GitHub Enterprise Server (GHES)** instances.
